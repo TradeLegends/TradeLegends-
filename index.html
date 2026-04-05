@@ -9,7 +9,71 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { font-family: 'Inter', sans-serif; }
-        body { transition: background-color 0.3s ease, color 0.2s ease; }
+        body { transition: background-color 0.3s ease, color 0.2s ease; margin: 0; overflow-x: hidden; }
+        
+        /* LOADING SCREEN STYLES */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a1f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+            backdrop-filter: blur(2px);
+        }
+        .loading-content {
+            text-align: center;
+            animation: pulseGlow 1.5s infinite ease-in-out;
+        }
+        .loading-logo {
+            width: 180px;
+            height: auto;
+            border-radius: 32px;
+            box-shadow: 0 0 30px rgba(247, 147, 26, 0.4);
+            animation: floatLogo 2s infinite alternate;
+        }
+        .loading-text {
+            margin-top: 24px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f7931a, #ffd966);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+        .loading-dots span {
+            display: inline-block;
+            animation: dotBlink 1.4s infinite;
+            font-size: 2rem;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes pulseGlow {
+            0% { transform: scale(0.98); opacity: 0.8; text-shadow: 0 0 0px #f7931a; }
+            100% { transform: scale(1.02); opacity: 1; text-shadow: 0 0 20px #f7931a; }
+        }
+        @keyframes floatLogo {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-12px); }
+        }
+        @keyframes dotBlink {
+            0%, 20% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+        .loading-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        /* rest of existing styles */
         .glass-card {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(12px);
@@ -31,10 +95,23 @@
         ::-webkit-scrollbar-thumb { background: #f0b90b; border-radius: 10px; }
     </style>
 </head>
-<body class="text-gray-200 overflow-x-hidden">
+<body class="text-gray-200">
+    <!-- FAKE LOADING SCREEN (animated) -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <img src="https://i.ibb.co/Rp4NpbPL/Edit-the-existing-lo3.jpg" alt="TradeLegends Logo" class="loading-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4664/4664838.png'">
+            <div class="loading-text mt-4">TradeLegends</div>
+            <div class="loading-dots mt-2">
+                <span>.</span><span>.</span><span>.</span>
+            </div>
+            <p class="text-gray-400 text-sm mt-4">Loading premium content...</p>
+        </div>
+    </div>
+
     <div id="root"></div>
 
     <script type="module">
+        // ----------------------------- FIREBASE IMPORTS -----------------------------
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -106,7 +183,7 @@
             });
         }
 
-        // USER VIEW (unchanged)
+        // USER VIEW
         function renderUserView() {
             const primary = siteSettings.primaryColor || '#f7931a';
             const bgColor = siteSettings.backgroundColor || '#0a0a1f';
@@ -185,7 +262,7 @@
                 try {
                     await addDoc(collection(db, "leads"), {
                         packageId, packageName, name, email, timestamp: new Date().toISOString(),
-                        status: "❔"   // default status = pending
+                        status: "❔"
                     });
                     alert(`Ευχαριστούμε! Επιλέξατε το πακέτο ${packageName}.`);
                     modalDiv.remove();
@@ -193,7 +270,7 @@
             };
         };
 
-        // ADMIN VIEW (with updated leads tab)
+        // ADMIN VIEW (with leads status and delete)
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
             return `
@@ -358,12 +435,9 @@
             modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove();
         }
 
-        // ------------------- NEW LEADS TAB WITH STATUS & DELETE -------------------
         async function renderLeadsTab() {
             const container = document.getElementById('adminTabContent');
             container.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-pulse"></i> Φόρτωση εγγραφών...</div>`;
-            
-            // Fetch leads ordered by timestamp
             const leadsSnap = await getDocs(query(collection(db, "leads"), orderBy("timestamp", "desc")));
             let leadsHtml = `
                 <h3 class="text-2xl font-bold mb-4">📋 Εγγραφές Χρηστών</h3>
@@ -381,7 +455,6 @@
                         </thead>
                         <tbody>
             `;
-            
             if (leadsSnap.empty) {
                 leadsHtml += `<tr><td colspan="6" class="text-center py-8 text-gray-400">Δεν υπάρχουν εγγραφές ακόμα.</td></tr>`;
             } else {
@@ -413,36 +486,27 @@
             leadsHtml += `</tbody></table></div>`;
             container.innerHTML = leadsHtml;
             
-            // Attach event listeners for status buttons
             document.querySelectorAll('.status-emoji').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
                     const leadId = btn.getAttribute('data-lead-id');
                     const newStatus = btn.getAttribute('data-status');
                     try {
                         await updateDoc(doc(db, "leads", leadId), { status: newStatus });
-                        // Refresh the leads tab to show updated status
                         renderLeadsTab();
-                    } catch(err) { console.error(err); alert("Σφάλμα κατά την ενημέρωση κατάστασης"); }
+                    } catch(err) { alert("Σφάλμα ενημέρωσης"); }
                 });
             });
-            
-            // Attach delete listeners
             document.querySelectorAll('.delete-lead').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
                     const leadId = btn.getAttribute('data-lead-id');
-                    if (confirm("Θα διαγραφεί οριστικά αυτή η εγγραφή. Συνέχεια;")) {
-                        try {
-                            await deleteDoc(doc(db, "leads", leadId));
-                            renderLeadsTab();  // refresh
-                        } catch(err) { alert("Σφάλμα διαγραφής: " + err.message); }
+                    if (confirm("Οριστική διαγραφή;")) {
+                        await deleteDoc(doc(db, "leads", leadId));
+                        renderLeadsTab();
                     }
                 });
             });
         }
 
-        // ------------------------------------------------------------
         function renderCurrentView() {
             const root = document.getElementById('root');
             if (currentMode === 'user') {
@@ -498,6 +562,7 @@
             });
         }
 
+        // ----------------------------- INIT & REMOVE LOADING SCREEN AFTER 3 SEC -----------------------------
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             currentMode = urlParams.get('admin') === 'true' ? 'admin' : 'user';
@@ -511,7 +576,19 @@
             } else {
                 renderCurrentView();
             }
+            
+            // Hide loading screen after 3 seconds with animation
+            setTimeout(() => {
+                const loadingDiv = document.getElementById('loadingScreen');
+                if (loadingDiv) {
+                    loadingDiv.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (loadingDiv && loadingDiv.parentNode) loadingDiv.style.display = 'none';
+                    }, 800);
+                }
+            }, 3000);
         }
+        
         init();
     </script>
 </body>
