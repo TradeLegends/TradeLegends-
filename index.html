@@ -11,22 +11,39 @@
         * { font-family: 'Inter', sans-serif; }
         body { transition: background-color 0.3s ease, color 0.2s ease; margin: 0; overflow-x: hidden; }
         
-        /* LOADING SCREEN STYLES */
+        /* LOADING SCREEN STYLES με fade background */
         .loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #0a0a1f;
+            background-image: url('https://i.ibb.co/S7cgyHJ2/fcd9ca6e-d05e-497c-90a6-c833528f92d4.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             transition: opacity 0.8s ease, visibility 0.8s ease;
-            backdrop-filter: blur(2px);
+            /* overlay για να "ξεθωριάσει" η εικόνα και να διαβάζεται το κείμενο */
+            backdrop-filter: brightness(0.7) blur(2px);
+        }
+        /* επιπλέον ημιδιαφανές στρώμα για ομοιομορφία */
+        .loading-screen::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 31, 0.65);
+            z-index: 1;
         }
         .loading-content {
+            position: relative;
+            z-index: 2;
             text-align: center;
             animation: pulseGlow 1.5s infinite ease-in-out;
         }
@@ -96,7 +113,7 @@
     </style>
 </head>
 <body class="text-gray-200">
-    <!-- FAKE LOADING SCREEN (animated) -->
+    <!-- FAKE LOADING SCREEN with faded background image -->
     <div id="loadingScreen" class="loading-screen">
         <div class="loading-content">
             <img src="https://i.ibb.co/Rp4NpbPL/Edit-the-existing-lo3.jpg" alt="TradeLegends Logo" class="loading-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4664/4664838.png'">
@@ -104,7 +121,7 @@
             <div class="loading-dots mt-2">
                 <span>.</span><span>.</span><span>.</span>
             </div>
-            <p class="text-gray-400 text-sm mt-4">Loading premium content...</p>
+            <p class="text-gray-200 text-sm mt-4 font-medium">Loading premium content...</p>
         </div>
     </div>
 
@@ -577,7 +594,7 @@
                 renderCurrentView();
             }
             
-            // Hide loading screen after 3 seconds with animation
+            // Hide loading screen after 3 seconds with fade-out
             setTimeout(() => {
                 const loadingDiv = document.getElementById('loadingScreen');
                 if (loadingDiv) {
