@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { font-family: 'Inter', sans-serif; }
-        body { transition: background-color 0.3s ease, color 0.2s ease; margin: 0; overflow-x: hidden; scroll-behavior: smooth; }
+        body { transition: background-color 0.3s ease, color 0.2s ease; margin: 0; overflow-x: hidden; }
         
-        /* LOADING SCREEN STYLES */
+        /* LOADING SCREEN */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -107,19 +107,12 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f0f1a; }
         ::-webkit-scrollbar-thumb { background: #f0b90b; border-radius: 10px; }
-        .announcement-card {
-            transition: all 0.2s ease;
-        }
-        .announcement-card:hover {
-            transform: translateY(-3px);
-        }
         .nav-link {
             transition: all 0.2s;
             position: relative;
+            cursor: pointer;
         }
-        .nav-link:hover {
-            opacity: 0.8;
-        }
+        .nav-link:hover { opacity: 0.8; }
         .nav-link.active {
             font-weight: 700;
         }
@@ -134,32 +127,27 @@
             border-radius: 2px;
         }
         @media (max-width: 768px) {
-            .nav-scroll {
-                overflow-x: auto;
-                white-space: nowrap;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: thin;
-            }
-            .nav-flex {
-                display: inline-flex;
-                gap: 1.5rem;
-            }
+            .nav-scroll { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+            .nav-flex { display: inline-flex; gap: 1.5rem; }
+        }
+        .page-transition {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body class="text-gray-200">
-    <!-- LOADING SCREEN -->
     <div id="loadingScreen" class="loading-screen">
         <div class="loading-content">
             <img src="https://i.ibb.co/Rp4NpbPL/Edit-the-existing-lo3.jpg" alt="TradeLegends Logo" class="loading-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4664/4664838.png'">
             <div class="loading-text mt-4">TradeLegends</div>
-            <div class="loading-dots mt-2">
-                <span>.</span><span>.</span><span>.</span>
-            </div>
+            <div class="loading-dots mt-2"><span>.</span><span>.</span><span>.</span></div>
             <p class="text-gray-200 text-sm mt-4 font-medium">Loading premium content...</p>
         </div>
     </div>
-
     <div id="root"></div>
 
     <script type="module">
@@ -182,12 +170,10 @@
 
         let currentMode = 'user';
         let adminAuthorized = false;
-        let currentAdminUser = null;
         let settingsUnsubscribe = null;
         let packagesUnsubscribe = null;
         let announcementsUnsubscribe = null;
         
-        // Extended site settings with new section contents (stored in Firebase)
         let siteSettings = {
             primaryColor: '#f7931a',
             backgroundColor: '#0a0a1f',
@@ -197,10 +183,12 @@
             heroImageUrl: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=2070&auto=format',
             logoUrl: 'https://cdn-icons-png.flaticon.com/512/4664/4664838.png',
             footerText: '© 2025 TradeLegends — Empowering Financial Freedom',
-            // NEW editable section contents
+            // Page contents (editable from admin)
+            homeContent: 'Καλώς ήρθατε στο TradeLegends! Ανακαλύψτε τον κόσμο των κρύπτο και των χρηματοοικονομικών αγορών με κορυφαίους mentors και μία ενεργή κοινότητα.',
             educationContent: 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα των κρύπτο και των χρηματοοικονομικών αγορών. Μαθήματα βίντεο, διαδραστικά quizzes και πραγματικές μελέτες περίπτωσης από ειδικούς.',
             mentorContent: 'Η ομάδα μας αποτελείται από επαγγελματίες traders με χρόνια εμπειρίας. Προσωπική καθοδήγηση, live sessions και στρατηγικές που αποδίδουν.',
             communityContent: 'Γίνετε μέλος σε μια αποκλειστική κοινότητα φιλόδοξων επενδυτών. Ανταλλάξτε ιδέες, συμμετέχετε σε webinars και λαμβάνετε καθημερινή υποστήριξη.',
+            pricingContent: 'Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας. Όλα τα πακέτα περιλαμβάνουν пожизненную πρόσβαση και υποστήριξη.',
             contactEmail: 'support@tradelegends.com',
             contactPhone: '+30 210 1234567',
             contactAddress: 'Αθήνα, Ελλάδα'
@@ -209,7 +197,6 @@
         let announcementsList = [];
 
         function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-
         function applyTheme(settings) {
             if (!settings) return;
             document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
@@ -217,12 +204,7 @@
             document.body.style.color = settings.textColor;
             let meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', settings.primaryColor);
-            else {
-                const m = document.createElement('meta');
-                m.name = "theme-color";
-                m.content = settings.primaryColor;
-                document.head.appendChild(m);
-            }
+            else { const m = document.createElement('meta'); m.name = "theme-color"; m.content = settings.primaryColor; document.head.appendChild(m); }
         }
 
         function initRealtimeSync() {
@@ -234,7 +216,6 @@
                 applyTheme(siteSettings);
                 renderCurrentView();
             });
-            
             if (packagesUnsubscribe) packagesUnsubscribe();
             const q = query(collection(db, "packages"), orderBy("order", "asc"));
             packagesUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -242,384 +223,210 @@
                 snapshot.forEach(doc => packagesList.push({ id: doc.id, ...doc.data() }));
                 renderCurrentView();
             });
-
             if (announcementsUnsubscribe) announcementsUnsubscribe();
             const announcementsQuery = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
             announcementsUnsubscribe = onSnapshot(announcementsQuery, (snapshot) => {
                 announcementsList = [];
-                snapshot.forEach(doc => {
-                    announcementsList.push({ id: doc.id, ...doc.data() });
-                });
+                snapshot.forEach(doc => announcementsList.push({ id: doc.id, ...doc.data() }));
                 renderCurrentView();
             });
         }
 
-        // Helper to highlight active nav link based on scroll
-        function initNavHighlight() {
-            const sections = ['home', 'education', 'mentor', 'community', 'packages', 'contact'];
-            const navLinks = document.querySelectorAll('.nav-link');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const id = entry.target.getAttribute('id');
-                        navLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('data-section') === id) {
-                                link.classList.add('active');
-                            }
-                        });
-                    }
-                });
-            }, { threshold: 0.4, rootMargin: '-80px 0px -40% 0px' });
-            sections.forEach(sec => {
-                const el = document.getElementById(sec);
-                if (el) observer.observe(el);
-            });
+        // ---------- ROUTER ----------
+        let currentPage = 'home';
+        function setPage(page) {
+            currentPage = page;
+            window.location.hash = page;
+            renderCurrentView();
         }
+        function getPageFromHash() {
+            let hash = window.location.hash.substring(1);
+            if (['home', 'education', 'mentor', 'community', 'pricing', 'contact'].includes(hash)) return hash;
+            return 'home';
+        }
+        window.addEventListener('hashchange', () => { if (currentMode === 'user') { currentPage = getPageFromHash(); renderCurrentView(); } });
 
-        // USER VIEW with new horizontal navbar and 6 sections
-        function renderUserView() {
-            const primary = siteSettings.primaryColor || '#f7931a';
-            const bgColor = siteSettings.backgroundColor || '#0a0a1f';
-            const heroImg = siteSettings.heroImageUrl;
-            const logoUrl = siteSettings.logoUrl;
-            
+        // ---------- PAGE RENDERERS ----------
+        function renderHomePage(primary, bgColor, logoUrl) {
+            const announcementsHtml = (() => {
+                const active = announcementsList.filter(a => a.active !== false);
+                if (!active.length) return '<div class="text-center text-gray-400 py-8"><i class="fas fa-newspaper"></i> Νέες ανακοινώσεις σύντομα...</div>';
+                return `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${active.map(ann => `<div class="announcement-card glass-card p-5 rounded-xl" style="background: rgba(0,0,0,0.35); border-left: 3px solid ${primary};"><div class="flex items-start justify-between"><h3 class="text-xl font-bold mb-2" style="color:${primary}">${escapeHtml(ann.title)}</h3><span class="text-xs text-gray-400">${ann.createdAt ? new Date(ann.createdAt).toLocaleDateString('el-GR') : 'Νέο'}</span></div><p class="text-gray-200 text-sm leading-relaxed">${escapeHtml(ann.content)}</p>${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" class="inline-block mt-3 text-xs font-semibold" style="color:${primary}"><i class="fas fa-external-link-alt"></i> Μάθετε περισσότερα</a>` : ''}</div>`).join('')}</div>`;
+            })();
+            return `
+                <div class="relative overflow-hidden pt-8 pb-8">
+                    <div class="absolute inset-0 hero-gradient opacity-40"></div>
+                    <div class="container mx-auto px-6 relative z-10">
+                        <div class="flex flex-col lg:flex-row items-center gap-12">
+                            <div class="flex-1 text-center lg:text-left">
+                                <h1 class="text-5xl md:text-6xl font-extrabold mb-4">${escapeHtml(siteSettings.heroTitle)}</h1>
+                                <p class="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 mb-8">${escapeHtml(siteSettings.heroSubtitle)}</p>
+                                <a href="#pricing" class="px-6 py-3 rounded-full font-bold btn-glow inline-block" style="background:${primary}; color:#fff;">Εξερεύνηση Πακέτων</a>
+                            </div>
+                            <div class="flex-1 flex justify-center"><img src="${escapeHtml(siteSettings.heroImageUrl)}" class="rounded-2xl shadow-2xl max-h-80 w-full object-cover border-2 border-white/20"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container mx-auto px-6 py-12">
+                    <div class="glass-card p-8 rounded-2xl max-w-4xl mx-auto" style="background: rgba(0,0,0,0.3);">
+                        <p class="text-lg leading-relaxed">${escapeHtml(siteSettings.homeContent)}</p>
+                    </div>
+                </div>
+                <div class="container mx-auto px-6 py-12 border-t border-white/10">
+                    <div class="flex items-center gap-3 justify-center mb-8"><i class="fas fa-bullhorn text-3xl" style="color:${primary}"></i><h2 class="text-3xl font-bold">Τελευταία Νέα & Ανακοινώσεις</h2></div>
+                    ${announcementsHtml}
+                </div>
+            `;
+        }
+        function renderEducationPage(primary) {
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-graduation-cap text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">Εκπαίδευση</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);"><p class="text-lg leading-relaxed">${escapeHtml(siteSettings.educationContent)}</p></div></div>`;
+        }
+        function renderMentorPage(primary) {
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-chalkboard-user text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">Mentorship</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);"><p class="text-lg leading-relaxed">${escapeHtml(siteSettings.mentorContent)}</p></div></div>`;
+        }
+        function renderCommunityPage(primary) {
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-users text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">Κοινότητα</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);"><p class="text-lg leading-relaxed">${escapeHtml(siteSettings.communityContent)}</p></div></div>`;
+        }
+        function renderPricingPage(primary) {
             const packagesHtml = packagesList.map(pkg => `
                 <div class="package-card glass-card p-6 rounded-2xl flex flex-col" style="background: rgba(0,0,0,0.45); backdrop-filter: blur(10px); border-left: 4px solid ${primary};">
                     ${pkg.imageUrl ? `<img src="${pkg.imageUrl}" class="w-full h-44 object-cover rounded-xl mb-4">` : `<div class="w-full h-44 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl mb-4 flex items-center justify-center"><i class="fas fa-coins text-4xl opacity-60" style="color:${primary}"></i></div>`}
                     <h3 class="text-2xl font-bold mb-2">${escapeHtml(pkg.name)}</h3>
                     <p class="text-gray-300 text-sm mb-3 flex-grow">${escapeHtml(pkg.description || 'Πλήρες εκπαιδευτικό πακέτο για κρύπτο.')}</p>
-                    <div class="flex items-baseline gap-2 mb-3">
-                        <span class="text-3xl font-black" style="color:${primary}">${escapeHtml(pkg.price || '€199')}</span>
-                        <span class="text-sm text-gray-400">one-time</span>
-                    </div>
-                    <div class="mb-4 text-xs text-gray-300">
-                        ${pkg.features ? (Array.isArray(pkg.features) ? pkg.features.map(f => `<span class="inline-block mr-2"><i class="fas fa-check-circle" style="color:${primary}"></i> ${escapeHtml(f)}</span>`).join('') : `<i class="fas fa-check-circle"></i> ${escapeHtml(pkg.features)}`) : '<i class="fas fa-chart-line"></i> 24/7 access, quizzes'}
-                    </div>
+                    <div class="flex items-baseline gap-2 mb-3"><span class="text-3xl font-black" style="color:${primary}">${escapeHtml(pkg.price || '€199')}</span><span class="text-sm text-gray-400">one-time</span></div>
+                    <div class="mb-4 text-xs text-gray-300">${pkg.features ? (Array.isArray(pkg.features) ? pkg.features.map(f => `<span class="inline-block mr-2"><i class="fas fa-check-circle" style="color:${primary}"></i> ${escapeHtml(f)}</span>`).join('') : `<i class="fas fa-check-circle"></i> ${escapeHtml(pkg.features)}`) : '<i class="fas fa-chart-line"></i> 24/7 access'}</div>
                     <button onclick="window.selectPackage('${pkg.id}', '${escapeHtml(pkg.name).replace(/'/g, "\\'")}')" class="mt-3 py-2 px-4 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">Επιλέξτε Πακέτο <i class="fas fa-arrow-right ml-1"></i></button>
                 </div>
             `).join('');
-            
-            const activeAnnouncements = announcementsList.filter(a => a.active !== false);
-            const announcementsHtml = activeAnnouncements.length === 0 ? 
-                `<div class="text-center text-gray-400 py-8"><i class="fas fa-newspaper"></i> Νέες ανακοινώσεις σύντομα...</div>` :
-                `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    ${activeAnnouncements.map(ann => `
-                        <div class="announcement-card glass-card p-5 rounded-xl" style="background: rgba(0,0,0,0.35); border-left: 3px solid ${primary};">
-                            <div class="flex items-start justify-between">
-                                <h3 class="text-xl font-bold mb-2" style="color:${primary}">${escapeHtml(ann.title)}</h3>
-                                <span class="text-xs text-gray-400">${ann.createdAt ? new Date(ann.createdAt).toLocaleDateString('el-GR') : 'Νέο'}</span>
-                            </div>
-                            <p class="text-gray-200 text-sm leading-relaxed">${escapeHtml(ann.content)}</p>
-                            ${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" class="inline-block mt-3 text-xs font-semibold" style="color:${primary}"><i class="fas fa-external-link-alt"></i> Μάθετε περισσότερα</a>` : ''}
+            return `
+                <div class="container mx-auto px-6 py-20">
+                    <div class="text-center mb-8"><h1 class="text-4xl md:text-5xl font-bold">Εκπαιδευτικά Πακέτα</h1><p class="text-gray-400 mt-2">${escapeHtml(siteSettings.pricingContent)}</p></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${packagesList.length === 0 ? '<div class="col-span-full text-center py-12"><i class="fas fa-spinner fa-pulse"></i> Φόρτωση...</div>' : packagesHtml}</div>
+                </div>
+            `;
+        }
+        function renderContactPage(primary) {
+            return `
+                <div class="container mx-auto px-6 py-20">
+                    <div class="text-center mb-10"><i class="fas fa-envelope text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">Επικοινωνία</h1><p class="text-gray-400 mt-2">Στείλτε μας μήνυμα ή βρείτε μας στα social</p></div>
+                    <div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);">
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div><h3 class="text-xl font-bold mb-4">Στοιχεία Επικοινωνίας</h3><div class="space-y-3"><div><i class="fas fa-envelope w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactEmail)}</div><div><i class="fas fa-phone-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactPhone)}</div><div><i class="fas fa-map-marker-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactAddress)}</div></div></div>
+                            <div><h3 class="text-xl font-bold mb-4">Φόρμα Επικοινωνίας</h3><form id="contactForm"><input type="text" id="contactName" placeholder="Ονοματεπώνυμο" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><input type="email" id="contactEmailInput" placeholder="Email" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><textarea id="contactMessage" rows="4" placeholder="Το μήνυμά σας..." class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required></textarea><button type="submit" class="px-6 py-2 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">Αποστολή Μηνύματος</button></form><div id="contactFormMsg" class="mt-3 text-sm text-green-400"></div></div>
                         </div>
-                    `).join('')}
-                </div>`;
-            
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderUserView() {
+            const primary = siteSettings.primaryColor;
+            const bgColor = siteSettings.backgroundColor;
+            const logoUrl = siteSettings.logoUrl;
+            let mainContent = '';
+            if (currentPage === 'home') mainContent = renderHomePage(primary, bgColor, logoUrl);
+            else if (currentPage === 'education') mainContent = renderEducationPage(primary);
+            else if (currentPage === 'mentor') mainContent = renderMentorPage(primary);
+            else if (currentPage === 'community') mainContent = renderCommunityPage(primary);
+            else if (currentPage === 'pricing') mainContent = renderPricingPage(primary);
+            else if (currentPage === 'contact') mainContent = renderContactPage(primary);
+            else mainContent = renderHomePage(primary, bgColor, logoUrl);
+
             return `
                 <div class="min-h-screen" style="background: ${bgColor}">
-                    <!-- Navbar with horizontal menu -->
                     <nav class="py-4 px-6 md:px-12 border-b border-white/10 backdrop-blur-md sticky top-0 z-50" style="background: ${bgColor}cc">
                         <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex items-center gap-3">
-                                <img src="${logoUrl}" class="w-10 h-10 rounded-full object-cover">
-                                <span class="text-xl font-extrabold" style="color:${primary}">TradeLegends</span>
-                            </div>
-                            <!-- Horizontal menu scrollable on mobile -->
-                            <div class="nav-scroll flex-1 flex justify-center mx-4">
-                                <div class="nav-flex flex gap-6 md:gap-8 text-sm font-medium">
-                                    <a href="#home" class="nav-link hover:opacity-80 transition" data-section="home" style="color:${primary}">Home</a>
-                                    <a href="#education" class="nav-link hover:opacity-80 transition" data-section="education" style="color:${primary}">Education</a>
-                                    <a href="#mentor" class="nav-link hover:opacity-80 transition" data-section="mentor" style="color:${primary}">Mentor</a>
-                                    <a href="#community" class="nav-link hover:opacity-80 transition" data-section="community" style="color:${primary}">Community</a>
-                                    <a href="#packages" class="nav-link hover:opacity-80 transition" data-section="packages" style="color:${primary}">Pricing</a>
-                                    <a href="#contact" class="nav-link hover:opacity-80 transition" data-section="contact" style="color:${primary}">Contact</a>
-                                </div>
-                            </div>
+                            <div class="flex items-center gap-3"><img src="${logoUrl}" class="w-10 h-10 rounded-full object-cover"><span class="text-xl font-extrabold" style="color:${primary}">TradeLegends</span></div>
+                            <div class="nav-scroll flex-1 flex justify-center mx-4"><div class="nav-flex flex gap-6 md:gap-8 text-sm font-medium">
+                                <a class="nav-link ${currentPage === 'home' ? 'active' : ''}" data-page="home" style="color:${primary}">Home</a>
+                                <a class="nav-link ${currentPage === 'education' ? 'active' : ''}" data-page="education" style="color:${primary}">Education</a>
+                                <a class="nav-link ${currentPage === 'mentor' ? 'active' : ''}" data-page="mentor" style="color:${primary}">Mentor</a>
+                                <a class="nav-link ${currentPage === 'community' ? 'active' : ''}" data-page="community" style="color:${primary}">Community</a>
+                                <a class="nav-link ${currentPage === 'pricing' ? 'active' : ''}" data-page="pricing" style="color:${primary}">Pricing</a>
+                                <a class="nav-link ${currentPage === 'contact' ? 'active' : ''}" data-page="contact" style="color:${primary}">Contact</a>
+                            </div></div>
                             <button id="openAdminWindowBtn" class="text-sm px-4 py-2 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user-shield mr-1"></i> Admin Portal</button>
                         </div>
                     </nav>
-                    
-                    <!-- HOME Section (Hero) -->
-                    <section id="home" class="relative overflow-hidden pt-8 pb-16 md:pt-16">
-                        <div class="absolute inset-0 hero-gradient opacity-40"></div>
-                        <div class="container mx-auto px-6 relative z-10">
-                            <div class="flex flex-col lg:flex-row items-center gap-12">
-                                <div class="flex-1 text-center lg:text-left">
-                                    <h1 class="text-5xl md:text-6xl font-extrabold mb-4">${escapeHtml(siteSettings.heroTitle)}</h1>
-                                    <p class="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 mb-8">${escapeHtml(siteSettings.heroSubtitle)}</p>
-                                    <a href="#packages" class="px-6 py-3 rounded-full font-bold btn-glow inline-block" style="background:${primary}; color:#fff;">Εξερεύνηση Πακέτων</a>
-                                </div>
-                                <div class="flex-1 flex justify-center">
-                                    <img src="${heroImg}" class="rounded-2xl shadow-2xl max-h-80 w-full object-cover border-2 border-white/20">
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- EDUCATION Section -->
-                    <section id="education" class="container mx-auto px-6 py-20 border-t border-white/10">
-                        <div class="text-center mb-10">
-                            <i class="fas fa-graduation-cap text-4xl mb-3" style="color:${primary}"></i>
-                            <h2 class="text-4xl font-bold">Εκπαίδευση & Μαθήματα</h2>
-                        </div>
-                        <div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);">
-                            <p class="text-lg leading-relaxed text-gray-200">${escapeHtml(siteSettings.educationContent || 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα των κρύπτο και των χρηματοοικονομικών αγορών. Μαθήματα βίντεο, διαδραστικά quizzes και πραγματικές μελέτες περίπτωσης από ειδικούς.')}</p>
-                        </div>
-                    </section>
-
-                    <!-- MENTOR Section -->
-                    <section id="mentor" class="container mx-auto px-6 py-20 border-t border-white/10">
-                        <div class="text-center mb-10">
-                            <i class="fas fa-chalkboard-user text-4xl mb-3" style="color:${primary}"></i>
-                            <h2 class="text-4xl font-bold">Mentorship & Καθοδήγηση</h2>
-                        </div>
-                        <div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);">
-                            <p class="text-lg leading-relaxed text-gray-200">${escapeHtml(siteSettings.mentorContent || 'Η ομάδα μας αποτελείται από επαγγελματίες traders με χρόνια εμπειρίας. Προσωπική καθοδήγηση, live sessions και στρατηγικές που αποδίδουν.')}</p>
-                        </div>
-                    </section>
-
-                    <!-- COMMUNITY Section -->
-                    <section id="community" class="container mx-auto px-6 py-20 border-t border-white/10">
-                        <div class="text-center mb-10">
-                            <i class="fas fa-users text-4xl mb-3" style="color:${primary}"></i>
-                            <h2 class="text-4xl font-bold">Αποκλειστική Κοινότητα</h2>
-                        </div>
-                        <div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);">
-                            <p class="text-lg leading-relaxed text-gray-200">${escapeHtml(siteSettings.communityContent || 'Γίνετε μέλος σε μια αποκλειστική κοινότητα φιλόδοξων επενδυτών. Ανταλλάξτε ιδέες, συμμετέχετε σε webinars και λαμβάνετε καθημερινή υποστήριξη.')}</p>
-                        </div>
-                    </section>
-
-                    <!-- PRICING Section (packages) -->
-                    <section id="packages" class="container mx-auto px-6 py-20 border-t border-white/10">
-                        <h2 class="text-4xl font-bold text-center mb-4">Εκπαιδευτικά Πακέτα</h2>
-                        <p class="text-center text-gray-400 mb-12">Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            ${packagesList.length === 0 ? '<div class="col-span-full text-center py-12"><i class="fas fa-spinner fa-pulse"></i> Φόρτωση...</div>' : packagesHtml}
-                        </div>
-                    </section>
-
-                    <!-- CONTACT Section -->
-                    <section id="contact" class="container mx-auto px-6 py-20 border-t border-white/10">
-                        <div class="text-center mb-10">
-                            <i class="fas fa-envelope text-4xl mb-3" style="color:${primary}"></i>
-                            <h2 class="text-4xl font-bold">Επικοινωνία</h2>
-                            <p class="text-gray-400 mt-2">Είμαστε εδώ για εσάς</p>
-                        </div>
-                        <div class="max-w-3xl mx-auto glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);">
-                            <div class="space-y-4 text-center md:text-left">
-                                <div class="flex flex-col md:flex-row items-center gap-4 justify-between">
-                                    <div><i class="fas fa-envelope w-6" style="color:${primary}"></i> <span class="ml-2">${escapeHtml(siteSettings.contactEmail || 'support@tradelegends.com')}</span></div>
-                                    <div><i class="fas fa-phone-alt w-6" style="color:${primary}"></i> <span class="ml-2">${escapeHtml(siteSettings.contactPhone || '+30 210 1234567')}</span></div>
-                                    <div><i class="fas fa-map-marker-alt w-6" style="color:${primary}"></i> <span class="ml-2">${escapeHtml(siteSettings.contactAddress || 'Αθήνα, Ελλάδα')}</span></div>
-                                </div>
-                                <div class="mt-6">
-                                    <form id="contactForm" class="space-y-4">
-                                        <input type="text" id="contactName" placeholder="Ονοματεπώνυμο" class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700" required>
-                                        <input type="email" id="contactEmailInput" placeholder="Email" class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700" required>
-                                        <textarea id="contactMessage" rows="4" placeholder="Το μήνυμά σας..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700" required></textarea>
-                                        <button type="submit" class="px-6 py-2 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">Αποστολή Μηνύματος</button>
-                                    </form>
-                                    <div id="contactFormMsg" class="mt-3 text-sm text-green-400"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Announcements Section (remains) -->
-                    <div class="container mx-auto px-6 py-16 border-t border-white/10">
-                        <div class="flex items-center gap-3 justify-center mb-8">
-                            <i class="fas fa-bullhorn text-3xl" style="color:${primary}"></i>
-                            <h2 class="text-3xl font-bold text-center">Τελευταία Νέα & Ανακοινώσεις</h2>
-                        </div>
-                        ${announcementsHtml}
-                    </div>
-
+                    <div class="page-transition">${mainContent}</div>
                     <footer class="border-t border-white/10 py-8 text-center text-gray-400 text-sm">${escapeHtml(siteSettings.footerText)}</footer>
                 </div>
             `;
         }
 
-        // Contact form handler (store messages in Firebase)
-        window.submitContactForm = async (name, email, message) => {
-            try {
-                await addDoc(collection(db, "contactMessages"), {
-                    name, email, message, timestamp: new Date().toISOString(), status: "unread"
-                });
-                return true;
-            } catch(e) { console.error(e); return false; }
-        };
-
-        // Package selection modal (unchanged)
         window.selectPackage = (packageId, packageName) => {
             const modalDiv = document.createElement('div');
             modalDiv.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000] p-4';
-            modalDiv.innerHTML = `
-                <div class="glass-card max-w-md w-full p-6 rounded-2xl relative" style="background:#11121f;">
-                    <button class="absolute top-3 right-4 text-white text-2xl" onclick="this.closest('.fixed').remove()">&times;</button>
-                    <h3 class="text-2xl font-bold mb-2" style="color:${siteSettings.primaryColor}">Επιλογή Πακέτου</h3>
-                    <p class="mb-4">Ενδιαφέρεστε για <strong>${escapeHtml(packageName)}</strong>. Αφήστε τα στοιχεία σας.</p>
-                    <input type="text" id="leadName" placeholder="Ονοματεπώνυμο" class="w-full mb-3 p-3 rounded-lg bg-gray-800 border border-gray-700">
-                    <input type="email" id="leadEmail" placeholder="Email" class="w-full mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700">
-                    <button id="submitLeadBtn" class="w-full py-2 rounded-full font-bold" style="background:${siteSettings.primaryColor}; color:#000">Αποστολή & Επιλογή</button>
-                </div>
-            `;
+            modalDiv.innerHTML = `<div class="glass-card max-w-md w-full p-6 rounded-2xl relative" style="background:#11121f;"><button class="absolute top-3 right-4 text-white text-2xl" onclick="this.closest('.fixed').remove()">&times;</button><h3 class="text-2xl font-bold mb-2" style="color:${siteSettings.primaryColor}">Επιλογή Πακέτου</h3><p class="mb-4">Ενδιαφέρεστε για <strong>${escapeHtml(packageName)}</strong>. Αφήστε τα στοιχεία σας.</p><input type="text" id="leadName" placeholder="Ονοματεπώνυμο" class="w-full mb-3 p-3 rounded-lg bg-gray-800 border border-gray-700"><input type="email" id="leadEmail" placeholder="Email" class="w-full mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700"><button id="submitLeadBtn" class="w-full py-2 rounded-full font-bold" style="background:${siteSettings.primaryColor}; color:#000">Αποστολή & Επιλογή</button></div>`;
             document.body.appendChild(modalDiv);
             document.getElementById('submitLeadBtn').onclick = async () => {
                 const name = document.getElementById('leadName').value.trim();
                 const email = document.getElementById('leadEmail').value.trim();
                 if (!name || !email) { alert("Συμπληρώστε όνομα και email"); return; }
-                try {
-                    await addDoc(collection(db, "leads"), {
-                        packageId, packageName, name, email, timestamp: new Date().toISOString(),
-                        status: "❔"
-                    });
-                    alert(`Ευχαριστούμε! Επιλέξατε το πακέτο ${packageName}.`);
-                    modalDiv.remove();
-                } catch(e) { alert("Σφάλμα: " + e.message); }
+                try { await addDoc(collection(db, "leads"), { packageId, packageName, name, email, timestamp: new Date().toISOString(), status: "❔" }); alert(`Ευχαριστούμε! Επιλέξατε το πακέτο ${packageName}.`); modalDiv.remove(); } 
+                catch(e) { alert("Σφάλμα: " + e.message); }
             };
         };
 
-        // ADMIN VIEW (extended settings with new fields)
+        // ---------- ADMIN VIEW (unchanged core, but settings tab extended with page contents) ----------
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
-            return `
-                <div class="min-h-screen p-6" style="background:#0b0c15;">
-                    <div class="max-w-6xl mx-auto">
-                        <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i>
-                                <h1 class="text-3xl font-bold">Admin Manager — TradeLegends</h1>
-                            </div>
-                            <div class="flex gap-3">
-                                <button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600"><i class="fas fa-eye"></i> Κύρια Ιστοσελίδα</button>
-                                <button id="adminLogoutBtn" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700"><i class="fas fa-sign-out-alt"></i> Αποσύνδεση</button>
-                            </div>
-                        </div>
-                        <div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap">
-                            <button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">🎨 Ρυθμίσεις Σχεδίασης & Περιεχομένου</button>
-                            <button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">📦 Διαχείριση Πακέτων</button>
-                            <button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">📋 Εγγραφές Χρηστών</button>
-                            <button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">📢 Ανακοινώσεις</button>
-                            <button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">💬 Μηνύματα Επικοινωνίας</button>
-                        </div>
-                        <div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div>
-                    </div>
-                </div>
-            `;
+            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-6xl mx-auto"><div class="flex justify-between items-center mb-8 flex-wrap gap-4"><div class="flex items-center gap-3"><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold">Admin Manager — TradeLegends</h1></div><div class="flex gap-3"><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600"><i class="fas fa-eye"></i> Κύρια Ιστοσελίδα</button><button id="adminLogoutBtn" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700"><i class="fas fa-sign-out-alt"></i> Αποσύνδεση</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">🎨 Ρυθμίσεις & Περιεχόμενο Σελίδων</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">📦 Πακέτα</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">📋 Εγγραφές</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">📢 Ανακοινώσεις</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">💬 Μηνύματα</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
         }
-
-        function renderAdminLogin() { /* same as before */ return `<div class="min-h-screen flex items-center justify-center p-5" style="background:#0a0a14;"><div class="glass-card max-w-md w-full p-8 rounded-2xl"><div class="text-center mb-6"><i class="fas fa-shield-alt text-5xl" style="color:#f7931a"></i><h2 class="text-2xl font-bold mt-2">Admin Authentication</h2></div><div id="adminAuthForm"><input type="email" id="adminEmail" placeholder="Email" class="w-full mb-3 p-3 rounded-lg bg-gray-800 border border-gray-700"><input type="password" id="adminPassword" placeholder="Κωδικός" class="w-full mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700"><button id="adminLoginBtn" class="w-full py-2 rounded-full font-bold mb-2" style="background:#f7931a; color:#000">Σύνδεση</button><button id="adminRegisterBtn" class="w-full py-2 rounded-full border border-gray-500 hover:bg-gray-800">Δημιουργία Λογαριασμού (Admin)</button></div><div id="adminAuthMsg" class="text-red-400 text-sm mt-3 text-center"></div></div></div>`; }
-
-        async function checkAdminAuthorization(user) { /* unchanged */ 
-            if (!user) return false;
-            const adminDocRef = doc(db, "admin", "adminData");
-            const adminSnap = await getDoc(adminDocRef);
-            if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true;
-            if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid, createdAt: new Date().toISOString() }); return true; }
-            return false;
-        }
-
-        function loadAdminDashboardLogic() {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab', 'bg-white/10'));
-                    btn.classList.add('active-tab', 'bg-white/10');
-                    if (btn.dataset.tab === 'settings') renderSettingsTab();
-                    if (btn.dataset.tab === 'packages') renderPackagesTab();
-                    if (btn.dataset.tab === 'leads') renderLeadsTab();
-                    if (btn.dataset.tab === 'announcements') renderAnnouncementsTab();
-                    if (btn.dataset.tab === 'contacts') renderContactMessagesTab();
-                };
-            });
-            renderSettingsTab();
-        }
-
+        function renderAdminLogin() { return `<div class="min-h-screen flex items-center justify-center p-5" style="background:#0a0a14;"><div class="glass-card max-w-md w-full p-8 rounded-2xl"><div class="text-center mb-6"><i class="fas fa-shield-alt text-5xl" style="color:#f7931a"></i><h2 class="text-2xl font-bold mt-2">Admin Authentication</h2></div><div id="adminAuthForm"><input type="email" id="adminEmail" placeholder="Email" class="w-full mb-3 p-3 rounded-lg bg-gray-800 border border-gray-700"><input type="password" id="adminPassword" placeholder="Κωδικός" class="w-full mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700"><button id="adminLoginBtn" class="w-full py-2 rounded-full font-bold mb-2" style="background:#f7931a; color:#000">Σύνδεση</button><button id="adminRegisterBtn" class="w-full py-2 rounded-full border border-gray-500 hover:bg-gray-800">Δημιουργία Λογαριασμού (Admin)</button></div><div id="adminAuthMsg" class="text-red-400 text-sm mt-3 text-center"></div></div></div>`; }
+        async function checkAdminAuthorization(user) { if (!user) return false; const adminDocRef = doc(db, "admin", "adminData"); const adminSnap = await getDoc(adminDocRef); if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true; if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid, createdAt: new Date().toISOString() }); return true; } return false; }
+        function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab', 'bg-white/10')); btn.classList.add('active-tab', 'bg-white/10'); if (btn.dataset.tab === 'settings') renderSettingsTab(); if (btn.dataset.tab === 'packages') renderPackagesTab(); if (btn.dataset.tab === 'leads') renderLeadsTab(); if (btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if (btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderSettingsTab(); }
         async function renderSettingsTab() {
             const container = document.getElementById('adminTabContent');
             const s = siteSettings;
-            container.innerHTML = `
-                <h3 class="text-2xl font-bold mb-5">Προσαρμογή Ιστοσελίδας & Περιεχομένου Ενοτήτων</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label>Primary Color</label><input type="color" id="primaryColor" value="${s.primaryColor}" class="w-full p-1 h-10 rounded"></div>
-                    <div><label>Background Color</label><input type="color" id="backgroundColor" value="${s.backgroundColor}" class="w-full p-1 h-10 rounded"></div>
-                    <div><label>Text Color</label><input type="color" id="textColor" value="${s.textColor}" class="w-full p-1 h-10 rounded"></div>
-                    <div><label>Hero Image URL</label><input type="text" id="heroImageUrl" value="${s.heroImageUrl}" class="w-full p-2 rounded bg-gray-800"></div>
-                    <div><label>Logo URL</label><input type="text" id="logoUrl" value="${s.logoUrl}" class="w-full p-2 rounded bg-gray-800"></div>
-                    <div><label>Hero Title</label><input type="text" id="heroTitle" value="${escapeHtml(s.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div>
-                    <div><label>Hero Subtitle</label><input type="text" id="heroSubtitle" value="${escapeHtml(s.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div>
-                    <div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(s.footerText)}" class="w-full p-2 rounded bg-gray-800"></div>
-                    <div class="md:col-span-2"><label>📘 Περιεχόμενο Education</label><textarea id="educationContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.educationContent || '')}</textarea></div>
-                    <div class="md:col-span-2"><label>🎓 Περιεχόμενο Mentor</label><textarea id="mentorContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.mentorContent || '')}</textarea></div>
-                    <div class="md:col-span-2"><label>👥 Περιεχόμενο Community</label><textarea id="communityContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.communityContent || '')}</textarea></div>
-                    <div><label>Email Επικοινωνίας</label><input type="email" id="contactEmail" value="${escapeHtml(s.contactEmail || '')}" class="w-full p-2 rounded bg-gray-800"></div>
-                    <div><label>Τηλέφωνο</label><input type="text" id="contactPhone" value="${escapeHtml(s.contactPhone || '')}" class="w-full p-2 rounded bg-gray-800"></div>
-                    <div><label>Διεύθυνση</label><input type="text" id="contactAddress" value="${escapeHtml(s.contactAddress || '')}" class="w-full p-2 rounded bg-gray-800"></div>
-                </div>
-                <button id="saveSettingsBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Αποθήκευση όλων</button>
-                <div id="settingsMsg" class="mt-3 text-green-400"></div>
-            `;
+            container.innerHTML = `<h3 class="text-2xl font-bold mb-5">Προσαρμογή Ιστοσελίδας & Περιεχόμενο Σελίδων</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label>Primary Color</label><input type="color" id="primaryColor" value="${s.primaryColor}" class="w-full p-1 h-10 rounded"></div>
+                <div><label>Background Color</label><input type="color" id="backgroundColor" value="${s.backgroundColor}" class="w-full p-1 h-10 rounded"></div>
+                <div><label>Text Color</label><input type="color" id="textColor" value="${s.textColor}" class="w-full p-1 h-10 rounded"></div>
+                <div><label>Hero Image URL</label><input type="text" id="heroImageUrl" value="${s.heroImageUrl}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Logo URL</label><input type="text" id="logoUrl" value="${s.logoUrl}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Title</label><input type="text" id="heroTitle" value="${escapeHtml(s.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Subtitle</label><input type="text" id="heroSubtitle" value="${escapeHtml(s.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(s.footerText)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="md:col-span-2"><label>🏠 Home Page Content</label><textarea id="homeContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.homeContent || '')}</textarea></div>
+                <div class="md:col-span-2"><label>📘 Education Page Content</label><textarea id="educationContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.educationContent || '')}</textarea></div>
+                <div class="md:col-span-2"><label>🎓 Mentor Page Content</label><textarea id="mentorContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.mentorContent || '')}</textarea></div>
+                <div class="md:col-span-2"><label>👥 Community Page Content</label><textarea id="communityContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.communityContent || '')}</textarea></div>
+                <div class="md:col-span-2"><label>💰 Pricing Page Content (επικεφαλίδα)</label><textarea id="pricingContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.pricingContent || '')}</textarea></div>
+                <div><label>Email Επικοινωνίας</label><input type="email" id="contactEmail" value="${escapeHtml(s.contactEmail || '')}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Τηλέφωνο</label><input type="text" id="contactPhone" value="${escapeHtml(s.contactPhone || '')}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Διεύθυνση</label><input type="text" id="contactAddress" value="${escapeHtml(s.contactAddress || '')}" class="w-full p-2 rounded bg-gray-800"></div>
+            </div><button id="saveSettingsBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Αποθήκευση όλων</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
             document.getElementById('saveSettingsBtn').onclick = async () => {
                 const updated = {
-                    primaryColor: document.getElementById('primaryColor').value,
-                    backgroundColor: document.getElementById('backgroundColor').value,
-                    textColor: document.getElementById('textColor').value,
-                    heroImageUrl: document.getElementById('heroImageUrl').value,
-                    logoUrl: document.getElementById('logoUrl').value,
-                    heroTitle: document.getElementById('heroTitle').value,
-                    heroSubtitle: document.getElementById('heroSubtitle').value,
-                    footerText: document.getElementById('footerText').value,
-                    educationContent: document.getElementById('educationContent').value,
-                    mentorContent: document.getElementById('mentorContent').value,
-                    communityContent: document.getElementById('communityContent').value,
-                    contactEmail: document.getElementById('contactEmail').value,
-                    contactPhone: document.getElementById('contactPhone').value,
-                    contactAddress: document.getElementById('contactAddress').value,
+                    primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value, textColor: document.getElementById('textColor').value,
+                    heroImageUrl: document.getElementById('heroImageUrl').value, logoUrl: document.getElementById('logoUrl').value,
+                    heroTitle: document.getElementById('heroTitle').value, heroSubtitle: document.getElementById('heroSubtitle').value, footerText: document.getElementById('footerText').value,
+                    homeContent: document.getElementById('homeContent').value, educationContent: document.getElementById('educationContent').value,
+                    mentorContent: document.getElementById('mentorContent').value, communityContent: document.getElementById('communityContent').value,
+                    pricingContent: document.getElementById('pricingContent').value,
+                    contactEmail: document.getElementById('contactEmail').value, contactPhone: document.getElementById('contactPhone').value, contactAddress: document.getElementById('contactAddress').value
                 };
                 await updateDoc(doc(db, "settings", "siteConfig"), updated);
-                document.getElementById('settingsMsg').innerText = "✅ Όλα αποθηκεύτηκαν!";
+                document.getElementById('settingsMsg').innerText = "✅ Αποθηκεύτηκαν όλες οι σελίδες!";
                 setTimeout(() => document.getElementById('settingsMsg').innerText = "", 2000);
             };
         }
-
-        // reuse existing renderPackagesTab, renderLeadsTab, renderAnnouncementsTab (unchanged but ensure they exist)
-        async function renderPackagesTab() { /* same as original */ const container = document.getElementById('adminTabContent'); const pkgHtml = packagesList.map(p => `<div class="flex justify-between items-center border-b border-gray-700 py-3"><div><strong>${escapeHtml(p.name)}</strong> - ${escapeHtml(p.price)}</div><div class="flex gap-2"><button onclick="window.editPackage('${p.id}')" class="px-3 py-1 bg-blue-600 rounded-lg text-sm"><i class="fas fa-edit"></i> Επεξ</button><button onclick="window.deletePackageItem('${p.id}')" class="px-3 py-1 bg-red-600 rounded-lg text-sm"><i class="fas fa-trash"></i> Διαγραφή</button></div></div>`).join(''); container.innerHTML = `<h3 class="text-2xl font-bold mb-4">Πακέτα</h3><button id="newPackageBtn" class="mb-5 px-4 py-2 rounded-lg bg-emerald-600"><i class="fas fa-plus"></i> Νέο Πακέτο</button><div class="space-y-2 max-h-96 overflow-auto">${pkgHtml || '<p class="text-gray-400">Κανένα πακέτο</p>'}</div>`; document.getElementById('newPackageBtn').onclick = () => showPackageForm(); window.editPackage = (id) => showPackageForm(packagesList.find(p => p.id === id)); window.deletePackageItem = async (id) => { if(confirm("Διαγραφή;")) await deleteDoc(doc(db, "packages", id)); }; }
-        async function showPackageForm(existing = null) { /* same as original */ const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-md"><h3 class="text-xl font-bold mb-3">${existing ? 'Επεξεργασία' : 'Νέο Πακέτο'}</h3><input id="pkgName" placeholder="Όνομα" value="${existing ? escapeHtml(existing.name) : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><input id="pkgPrice" placeholder="Τιμή" value="${existing ? escapeHtml(existing.price) : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><textarea id="pkgDesc" placeholder="Περιγραφή" class="w-full p-2 mb-3 rounded bg-gray-800">${existing ? escapeHtml(existing.description || '') : ''}</textarea><input id="pkgImage" placeholder="Εικόνα URL" value="${existing ? escapeHtml(existing.imageUrl || '') : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><input id="pkgFeatures" placeholder="Χαρακτηριστικά (κόμμα)" value="${existing && existing.features ? (Array.isArray(existing.features) ? existing.features.join(',') : existing.features) : ''}" class="w-full p-2 mb-4 rounded bg-gray-800"><div class="flex gap-3"><button id="savePkgBtn" class="flex-1 py-2 rounded-lg bg-amber-500">Αποθήκευση</button><button id="cancelPkgBtn" class="flex-1 py-2 rounded-lg bg-gray-600">Άκυρο</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#savePkgBtn').onclick = async () => { const name = document.getElementById('pkgName').value.trim(); if(!name) return alert("Όνομα απαραίτητο"); const featuresRaw = document.getElementById('pkgFeatures').value; const featuresArr = featuresRaw ? featuresRaw.split(',').map(f=>f.trim()) : []; const pkgData = { name, price: document.getElementById('pkgPrice').value, description: document.getElementById('pkgDesc').value, imageUrl: document.getElementById('pkgImage').value, features: featuresArr, order: existing ? existing.order : Date.now() }; if (existing) await updateDoc(doc(db, "packages", existing.id), pkgData); else await addDoc(collection(db, "packages"), pkgData); modalDiv.remove(); }; modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove(); }
-        async function renderLeadsTab() { /* same as original with status left */ const container = document.getElementById('adminTabContent'); container.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-pulse"></i> Φόρτωση εγγραφών...</div>`; const leadsSnap = await getDocs(query(collection(db, "leads"), orderBy("timestamp", "desc"))); let leadsHtml = `<h3 class="text-2xl font-bold mb-4">📋 Εγγραφές Χρηστών</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="border-b border-gray-600"><tr class="text-left"><th class="pb-2">Ονοματεπώνυμο</th><th class="pb-2">Email</th><th class="pb-2">Πακέτο</th><th class="pb-2">Κατάσταση</th><th class="pb-2">Ημερομηνία</th><th class="pb-2">Ενέργειες</th></tr></thead><tbody>`; if (leadsSnap.empty) { leadsHtml += `<tr><td colspan="6" class="text-center py-8 text-gray-400">Δεν υπάρχουν εγγραφές ακόμα.</td></tr>`; } else { for (const docSnap of leadsSnap.docs) { const data = docSnap.data(); const leadId = docSnap.id; const currentStatus = data.status || "❔"; leadsHtml += `<tr class="border-b border-gray-700/50 hover:bg-white/5"><td class="py-3 font-medium">${escapeHtml(data.name || '?')}</td><td class="py-3">${escapeHtml(data.email || '')}</td><td class="py-3">${escapeHtml(data.packageName || '—')}</td><td class="py-3"><div class="flex items-center gap-3"><span class="text-2xl" style="color:${siteSettings.primaryColor}">${currentStatus}</span><div class="flex gap-2 text-2xl"><button class="status-emoji hover:scale-110 transition" data-lead-id="${leadId}" data-status="✅">✅</button><button class="status-emoji hover:scale-110 transition" data-lead-id="${leadId}" data-status="❌">❌</button><button class="status-emoji hover:scale-110 transition" data-lead-id="${leadId}" data-status="❔">❔</button></div></div></td><td class="py-3 text-xs text-gray-400">${new Date(data.timestamp).toLocaleString()}</td><td class="py-3"><button class="delete-lead text-red-400 hover:text-red-300 text-xl" data-lead-id="${leadId}"><i class="fas fa-trash-alt"></i></button></td></tr>`; } } leadsHtml += `</tbody></table></div>`; container.innerHTML = leadsHtml; document.querySelectorAll('.status-emoji').forEach(btn => { btn.addEventListener('click', async (e) => { const leadId = btn.getAttribute('data-lead-id'); const newStatus = btn.getAttribute('data-status'); try { await updateDoc(doc(db, "leads", leadId), { status: newStatus }); renderLeadsTab(); } catch(err) { alert("Σφάλμα ενημέρωσης"); } }); }); document.querySelectorAll('.delete-lead').forEach(btn => { btn.addEventListener('click', async (e) => { const leadId = btn.getAttribute('data-lead-id'); if (confirm("Οριστική διαγραφή;")) { await deleteDoc(doc(db, "leads", leadId)); renderLeadsTab(); } }); }); }
-        async function renderAnnouncementsTab() { const container = document.getElementById('adminTabContent'); const annHtml = announcementsList.map(ann => `<div class="flex justify-between items-start border-b border-gray-700 py-4"><div class="flex-1"><div class="flex items-center gap-2"><span class="font-bold text-lg">${escapeHtml(ann.title)}</span><span class="text-xs px-2 py-0.5 rounded-full ${ann.active !== false ? 'bg-green-600' : 'bg-gray-500'}">${ann.active !== false ? 'Ενεργή' : 'Ανενεργή'}</span></div><p class="text-gray-300 text-sm mt-1">${escapeHtml(ann.content.substring(0, 80))}${ann.content.length > 80 ? '…' : ''}</p><div class="text-xs text-gray-400 mt-1">${ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : '—'}</div></div><div class="flex gap-2 ml-4"><button onclick="window.editAnnouncement('${ann.id}')" class="px-3 py-1 bg-blue-600 rounded-lg text-sm"><i class="fas fa-edit"></i></button><button onclick="window.deleteAnnouncementItem('${ann.id}')" class="px-3 py-1 bg-red-600 rounded-lg text-sm"><i class="fas fa-trash"></i></button></div></div>`).join(''); container.innerHTML = `<h3 class="text-2xl font-bold mb-4">📢 Διαχείριση Ανακοινώσεων</h3><button id="newAnnouncementBtn" class="mb-5 px-4 py-2 rounded-lg bg-emerald-600"><i class="fas fa-plus"></i> Νέα Ανακοίνωση</button><div class="space-y-2 max-h-96 overflow-auto">${annHtml || '<p class="text-gray-400">Καμία ανακοίνωση.</p>'}</div>`; document.getElementById('newAnnouncementBtn').onclick = () => showAnnouncementForm(); window.editAnnouncement = (id) => showAnnouncementForm(announcementsList.find(a => a.id === id)); window.deleteAnnouncementItem = async (id) => { if(confirm("Διαγραφή ανακοίνωσης;")) await deleteDoc(doc(db, "announcements", id)); }; }
-        async function showAnnouncementForm(existing = null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-lg"><h3 class="text-xl font-bold mb-3">${existing ? 'Επεξεργασία Ανακοίνωσης' : 'Νέα Ανακοίνωση'}</h3><input id="annTitle" placeholder="Τίτλος" value="${existing ? escapeHtml(existing.title) : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><textarea id="annContent" placeholder="Περιεχόμενο ανακοίνωσης..." rows="4" class="w-full p-2 mb-3 rounded bg-gray-800">${existing ? escapeHtml(existing.content || '') : ''}</textarea><input id="annLink" placeholder="Σύνδεσμος (προαιρετικό)" value="${existing ? escapeHtml(existing.link || '') : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><div class="flex items-center gap-4 mb-4"><label class="flex items-center gap-2"><input type="checkbox" id="annActive" ${existing && existing.active === false ? '' : 'checked'}> Ενεργή (εμφάνιση στο site)</label></div><div class="flex gap-3"><button id="saveAnnBtn" class="flex-1 py-2 rounded-lg bg-amber-500">Αποθήκευση</button><button id="cancelAnnBtn" class="flex-1 py-2 rounded-lg bg-gray-600">Άκυρο</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#saveAnnBtn').onclick = async () => { const title = document.getElementById('annTitle').value.trim(); if(!title) return alert("Τίτλος απαραίτητος"); const content = document.getElementById('annContent').value.trim(); if(!content) return alert("Περιεχόμενο απαραίτητο"); const active = document.getElementById('annActive').checked; const link = document.getElementById('annLink').value.trim(); const now = new Date().toISOString(); const annData = { title, content, link: link || '', active, updatedAt: now, createdAt: existing ? existing.createdAt : now }; if (existing) await updateDoc(doc(db, "announcements", existing.id), annData); else await addDoc(collection(db, "announcements"), annData); modalDiv.remove(); }; modalDiv.querySelector('#cancelAnnBtn').onclick = () => modalDiv.remove(); }
-        
-        async function renderContactMessagesTab() {
-            const container = document.getElementById('adminTabContent');
-            container.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-pulse"></i> Φόρτωση μηνυμάτων...</div>`;
-            const msgsSnap = await getDocs(query(collection(db, "contactMessages"), orderBy("timestamp", "desc")));
-            let html = `<h3 class="text-2xl font-bold mb-4">💬 Μηνύματα από τη Φόρμα Επικοινωνίας</h3><div class="space-y-4 max-h-[600px] overflow-auto">`;
-            if (msgsSnap.empty) html += `<p class="text-gray-400">Δεν υπάρχουν μηνύματα ακόμα.</p>`;
-            else {
-                for (const docSnap of msgsSnap.docs) {
-                    const msg = docSnap.data();
-                    html += `<div class="glass-card p-4 rounded-xl border-l-4" style="border-left-color: ${siteSettings.primaryColor};"><div class="flex justify-between"><div><strong>${escapeHtml(msg.name)}</strong> (${escapeHtml(msg.email)})</div><span class="text-xs text-gray-400">${new Date(msg.timestamp).toLocaleString()}</span></div><p class="mt-2 text-gray-200">${escapeHtml(msg.message)}</p><div class="flex gap-2 mt-3"><button class="delete-msg bg-red-600/80 text-sm px-3 py-1 rounded" data-id="${docSnap.id}"><i class="fas fa-trash"></i> Διαγραφή</button></div></div>`;
-                }
-            }
-            html += `</div>`;
-            container.innerHTML = html;
-            document.querySelectorAll('.delete-msg').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const id = btn.getAttribute('data-id');
-                    if(confirm("Διαγραφή μηνύματος;")) { await deleteDoc(doc(db, "contactMessages", id)); renderContactMessagesTab(); }
-                });
-            });
-        }
+        async function renderPackagesTab() { const container = document.getElementById('adminTabContent'); const pkgHtml = packagesList.map(p => `<div class="flex justify-between items-center border-b border-gray-700 py-3"><div><strong>${escapeHtml(p.name)}</strong> - ${escapeHtml(p.price)}</div><div class="flex gap-2"><button onclick="window.editPackage('${p.id}')" class="px-3 py-1 bg-blue-600 rounded-lg text-sm"><i class="fas fa-edit"></i></button><button onclick="window.deletePackageItem('${p.id}')" class="px-3 py-1 bg-red-600 rounded-lg text-sm"><i class="fas fa-trash"></i></button></div></div>`).join(''); container.innerHTML = `<h3 class="text-2xl font-bold mb-4">Πακέτα</h3><button id="newPackageBtn" class="mb-5 px-4 py-2 rounded-lg bg-emerald-600"><i class="fas fa-plus"></i> Νέο Πακέτο</button><div class="space-y-2 max-h-96 overflow-auto">${pkgHtml || '<p class="text-gray-400">Κανένα πακέτο</p>'}</div>`; document.getElementById('newPackageBtn').onclick = () => showPackageForm(); window.editPackage = (id) => showPackageForm(packagesList.find(p => p.id === id)); window.deletePackageItem = async (id) => { if(confirm("Διαγραφή;")) await deleteDoc(doc(db, "packages", id)); }; }
+        async function showPackageForm(existing = null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-md"><h3 class="text-xl font-bold mb-3">${existing ? 'Επεξεργασία' : 'Νέο Πακέτο'}</h3><input id="pkgName" placeholder="Όνομα" value="${existing ? escapeHtml(existing.name) : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><input id="pkgPrice" placeholder="Τιμή" value="${existing ? escapeHtml(existing.price) : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><textarea id="pkgDesc" placeholder="Περιγραφή" class="w-full p-2 mb-3 rounded bg-gray-800">${existing ? escapeHtml(existing.description || '') : ''}</textarea><input id="pkgImage" placeholder="Εικόνα URL" value="${existing ? escapeHtml(existing.imageUrl || '') : ''}" class="w-full p-2 mb-3 rounded bg-gray-800"><input id="pkgFeatures" placeholder="Χαρακτηριστικά (κόμμα)" value="${existing && existing.features ? (Array.isArray(existing.features) ? existing.features.join(',') : existing.features) : ''}" class="w-full p-2 mb-4 rounded bg-gray-800"><div class="flex gap-3"><button id="savePkgBtn" class="flex-1 py-2 rounded-lg bg-amber-500">Αποθήκευση</button><button id="cancelPkgBtn" class="flex-1 py-2 rounded-lg bg-gray-600">Άκυρο</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#savePkgBtn').onclick = async () => { const name = document.getElementById('pkgName').value.trim(); if(!name) return alert("Όνομα απαραίτητο"); const featuresRaw = document.getElementById('pkgFeatures').value; const featuresArr = featuresRaw ? featuresRaw.split(',').map(f=>f.trim()) : []; const pkgData = { name, price: document.getElementById('pkgPrice').value, description: document.getElementById('pkgDesc').value, imageUrl: document.getElementById('pkgImage').value, features: featuresArr, order: existing ? existing.order : Date.now() }; if (existing) await updateDoc(doc(db, "packages", existing.id), pkgData); else await addDoc(collection(db, "packages"), pkgData); modalDiv.remove(); }; modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove(); }
+        async function renderLeadsTab() { const container = document.getElementById('adminTabContent'); container.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-pulse"></i> Φόρτωση...</div>`; const leadsSnap = await getDocs(query(collection(db, "leads"), orderBy("timestamp", "desc"))); let html = `<h3 class="text-2xl font-bold mb-4">📋 Εγγραφές</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Ονομα</th><th>Email</th><th>Πακέτο</th><th>Κατάσταση</th><th>Ημ/νία</th><th></th></tr></thead><tbody>`; leadsSnap.forEach(docSnap => { const d = docSnap.data(); html += `<tr><td>${escapeHtml(d.name)}</td><td>${escapeHtml(d.email)}</td><td>${escapeHtml(d.packageName)}</td><td><div class="flex items-center gap-2"><span class="text-xl">${d.status||'❔'}</span><div class="flex gap-1"><button class="status-emoji" data-id="${docSnap.id}" data-status="✅">✅</button><button class="status-emoji" data-id="${docSnap.id}" data-status="❌">❌</button><button class="status-emoji" data-id="${docSnap.id}" data-status="❔">❔</button></div></div></td><td>${new Date(d.timestamp).toLocaleString()}</td><td><button class="delete-lead text-red-400" data-id="${docSnap.id}"><i class="fas fa-trash"></i></button></td></tr>`; }); html += `</tbody></table></div>`; container.innerHTML = html; document.querySelectorAll('.status-emoji').forEach(btn => btn.onclick = async () => { await updateDoc(doc(db, "leads", btn.dataset.id), { status: btn.dataset.status }); renderLeadsTab(); }); document.querySelectorAll('.delete-lead').forEach(btn => btn.onclick = async () => { if(confirm("Διαγραφή;")) await deleteDoc(doc(db, "leads", btn.dataset.id)); renderLeadsTab(); }); }
+        async function renderAnnouncementsTab() { const container = document.getElementById('adminTabContent'); const annHtml = announcementsList.map(ann => `<div class="flex justify-between items-start border-b border-gray-700 py-3"><div><strong>${escapeHtml(ann.title)}</strong> <span class="text-xs ${ann.active!==false?'text-green-400':'text-gray-500'}">${ann.active!==false?'Ενεργή':'Ανενεργή'}</span><p class="text-sm text-gray-300">${escapeHtml(ann.content.substring(0,80))}</p></div><div><button onclick="window.editAnnouncement('${ann.id}')" class="bg-blue-600 px-2 py-1 rounded text-sm"><i class="fas fa-edit"></i></button> <button onclick="window.deleteAnnouncementItem('${ann.id}')" class="bg-red-600 px-2 py-1 rounded text-sm"><i class="fas fa-trash"></i></button></div></div>`).join(''); container.innerHTML = `<h3 class="text-2xl font-bold mb-4">Ανακοινώσεις</h3><button id="newAnnouncementBtn" class="mb-4 bg-emerald-600 px-3 py-1 rounded">+ Νέα</button><div>${annHtml||'Καμία'}</div>`; document.getElementById('newAnnouncementBtn').onclick = () => showAnnouncementForm(); window.editAnnouncement = (id) => showAnnouncementForm(announcementsList.find(a=>a.id===id)); window.deleteAnnouncementItem = async (id) => { if(confirm("Διαγραφή;")) await deleteDoc(doc(db,"announcements",id)); }; }
+        async function showAnnouncementForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-lg"><h3 class="text-xl font-bold mb-3">${existing?'Επεξεργασία':'Νέα Ανακοίνωση'}</h3><input id="annTitle" placeholder="Τίτλος" value="${existing?escapeHtml(existing.title):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><textarea id="annContent" placeholder="Περιεχόμενο" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content):''}</textarea><input id="annLink" placeholder="Σύνδεσμος (προαιρ.)" value="${existing?escapeHtml(existing.link||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><label><input type="checkbox" id="annActive" ${existing&&existing.active===false?'':'checked'}> Ενεργή</label><div class="flex gap-3 mt-4"><button id="saveAnnBtn" class="bg-amber-500 py-2 px-4 rounded">Αποθήκευση</button><button id="cancelAnnBtn" class="bg-gray-600 py-2 px-4 rounded">Άκυρο</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#saveAnnBtn').onclick = async () => { const title = document.getElementById('annTitle').value.trim(); if(!title) return; const content = document.getElementById('annContent').value.trim(); if(!content) return; const active = document.getElementById('annActive').checked; const now = new Date().toISOString(); const data = { title, content, link: document.getElementById('annLink').value.trim(), active, updatedAt: now, createdAt: existing?existing.createdAt:now }; if(existing) await updateDoc(doc(db,"announcements",existing.id), data); else await addDoc(collection(db,"announcements"), data); modalDiv.remove(); }; modalDiv.querySelector('#cancelAnnBtn').onclick = () => modalDiv.remove(); }
+        async function renderContactMessagesTab() { const container = document.getElementById('adminTabContent'); const msgs = await getDocs(query(collection(db,"contactMessages"), orderBy("timestamp","desc"))); let html = `<h3 class="text-2xl font-bold mb-4">Μηνύματα Επικοινωνίας</h3><div class="space-y-3">`; msgs.forEach(d => { const m = d.data(); html += `<div class="glass-card p-3 rounded"><div><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.email)}) - ${new Date(m.timestamp).toLocaleString()}</div><p class="mt-1">${escapeHtml(m.message)}</p><button class="delete-msg bg-red-600 text-sm px-2 py-1 rounded mt-2" data-id="${d.id}"><i class="fas fa-trash"></i> Διαγραφή</button></div>`; }); html += `</div>`; container.innerHTML = html; document.querySelectorAll('.delete-msg').forEach(btn => btn.onclick = async () => { if(confirm("Διαγραφή;")) await deleteDoc(doc(db,"contactMessages",btn.dataset.id)); renderContactMessagesTab(); }); }
 
         function renderCurrentView() {
             const root = document.getElementById('root');
             if (currentMode === 'user') {
                 root.innerHTML = renderUserView();
-                document.getElementById('openAdminWindowBtn')?.addEventListener('click', () => {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('admin', 'true');
-                    window.open(url.toString(), '_blank', 'width=1300,height=900,resizable=yes');
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', (e) => { e.preventDefault(); const page = link.getAttribute('data-page'); if(page) setPage(page); });
                 });
+                document.getElementById('openAdminWindowBtn')?.addEventListener('click', () => { const url = new URL(window.location.href); url.searchParams.set('admin', 'true'); window.open(url.toString(), '_blank', 'width=1300,height=900,resizable=yes'); });
                 const contactForm = document.getElementById('contactForm');
                 if(contactForm) {
                     contactForm.onsubmit = async (e) => {
@@ -627,41 +434,29 @@
                         const name = document.getElementById('contactName').value.trim();
                         const email = document.getElementById('contactEmailInput').value.trim();
                         const message = document.getElementById('contactMessage').value.trim();
-                        if(!name || !email || !message) { alert("Συμπληρώστε όλα τα πεδία."); return; }
-                        const ok = await window.submitContactForm(name, email, message);
-                        const msgDiv = document.getElementById('contactFormMsg');
-                        if(ok) { msgDiv.innerText = "✅ Το μήνυμα στάλθηκε επιτυχώς!"; contactForm.reset(); setTimeout(()=>msgDiv.innerText="", 3000); }
-                        else { msgDiv.innerText = "❌ Σφάλμα αποστολής."; }
+                        if(!name||!email||!message) return alert("Συμπληρώστε όλα τα πεδία.");
+                        try { await addDoc(collection(db, "contactMessages"), { name, email, message, timestamp: new Date().toISOString(), status: "unread" }); document.getElementById('contactFormMsg').innerText = "✅ Μήνυμα στάλθηκε!"; contactForm.reset(); setTimeout(()=>document.getElementById('contactFormMsg').innerText="",3000); } catch(e) { alert("Σφάλμα"); }
                     };
                 }
-                setTimeout(() => initNavHighlight(), 200);
             } else {
                 root.innerHTML = renderAdminView();
-                if (adminAuthorized) {
-                    setTimeout(() => loadAdminDashboardLogic(), 50);
-                    document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => { await signOut(auth); window.location.reload(); });
-                    document.getElementById('viewMainSiteBtn')?.addEventListener('click', () => { const mainUrl = new URL(window.location.href); mainUrl.searchParams.delete('admin'); window.open(mainUrl.toString(), '_blank'); });
-                } else { attachAdminAuthEvents(); }
+                if (adminAuthorized) { setTimeout(() => loadAdminDashboardLogic(), 50); document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => { await signOut(auth); window.location.reload(); }); document.getElementById('viewMainSiteBtn')?.addEventListener('click', () => { const mainUrl = new URL(window.location.href); mainUrl.searchParams.delete('admin'); window.open(mainUrl.toString(), '_blank'); }); }
+                else { attachAdminAuthEvents(); }
             }
         }
-
-        function attachAdminAuthEvents() {
-            document.getElementById('adminLoginBtn')?.addEventListener('click', async () => { const email = document.getElementById('adminEmail').value; const pwd = document.getElementById('adminPassword').value; try { const cred = await signInWithEmailAndPassword(auth, email, pwd); const isAdmin = await checkAdminAuthorization(cred.user); if (isAdmin) { adminAuthorized = true; currentAdminUser = cred.user; renderCurrentView(); } else document.getElementById('adminAuthMsg').innerText = "Δεν είστε διαχειριστής."; } catch(e) { document.getElementById('adminAuthMsg').innerText = e.message; } });
-            document.getElementById('adminRegisterBtn')?.addEventListener('click', async () => { const email = document.getElementById('adminEmail').value; const pwd = document.getElementById('adminPassword').value; if (!email || !pwd) return alert("Συμπληρώστε email & password"); try { const userCred = await createUserWithEmailAndPassword(auth, email, pwd); const adminDocRef = doc(db, "admin", "adminData"); const snap = await getDoc(adminDocRef); if (!snap.exists()) { await setDoc(adminDocRef, { adminUid: userCred.user.uid }); adminAuthorized = true; currentAdminUser = userCred.user; renderCurrentView(); } else alert("Υπάρχει ήδη admin. Συνδεθείτε."); } catch(e) { document.getElementById('adminAuthMsg').innerText = e.message; } });
-        }
+        function attachAdminAuthEvents() { document.getElementById('adminLoginBtn')?.addEventListener('click', async () => { const email = document.getElementById('adminEmail').value, pwd = document.getElementById('adminPassword').value; try { const cred = await signInWithEmailAndPassword(auth, email, pwd); if(await checkAdminAuthorization(cred.user)) { adminAuthorized=true; currentAdminUser=cred.user; renderCurrentView(); } else document.getElementById('adminAuthMsg').innerText="Δεν είστε admin."; } catch(e){ document.getElementById('adminAuthMsg').innerText=e.message; } }); document.getElementById('adminRegisterBtn')?.addEventListener('click', async () => { const email = document.getElementById('adminEmail').value, pwd = document.getElementById('adminPassword').value; if(!email||!pwd) return; try { const userCred = await createUserWithEmailAndPassword(auth, email, pwd); const adminDocRef = doc(db,"admin","adminData"); const snap = await getDoc(adminDocRef); if(!snap.exists()) { await setDoc(adminDocRef, { adminUid: userCred.user.uid }); adminAuthorized=true; renderCurrentView(); } else alert("Υπάρχει ήδη admin."); } catch(e){ alert(e.message); } }); }
 
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             currentMode = urlParams.get('admin') === 'true' ? 'admin' : 'user';
             await initRealtimeSync();
             if (currentMode === 'admin') {
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) adminAuthorized = await checkAdminAuthorization(user);
-                    else adminAuthorized = false;
-                    renderCurrentView();
-                });
-            } else { renderCurrentView(); }
-            setTimeout(() => { const loadingDiv = document.getElementById('loadingScreen'); if (loadingDiv) { loadingDiv.classList.add('fade-out'); setTimeout(() => { if (loadingDiv && loadingDiv.parentNode) loadingDiv.style.display = 'none'; }, 800); } }, 3000);
+                onAuthStateChanged(auth, async (user) => { if (user) adminAuthorized = await checkAdminAuthorization(user); else adminAuthorized = false; renderCurrentView(); });
+            } else {
+                currentPage = getPageFromHash();
+                renderCurrentView();
+            }
+            setTimeout(() => { const ld = document.getElementById('loadingScreen'); if(ld) { ld.classList.add('fade-out'); setTimeout(()=>{if(ld&&ld.parentNode) ld.style.display='none';},800); } }, 3000);
         }
         init();
     </script>
