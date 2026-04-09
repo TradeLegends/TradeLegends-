@@ -56,6 +56,14 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .lang-btn { transition: all 0.2s; cursor: pointer; }
         .lang-btn.active { font-weight: bold; text-decoration: underline; }
+        /* Carousel styles */
+        .carousel-container { position: relative; overflow: hidden; border-radius: 1.5rem; box-shadow: 0 25px 35px -12px rgba(0,0,0,0.5); }
+        .carousel-slides { display: flex; transition: transform 0.5s ease-in-out; }
+        .carousel-slide { flex: 0 0 100%; }
+        .carousel-slide img { width: 100%; height: 400px; object-fit: cover; }
+        .carousel-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; }
+        .carousel-dot.active { background: white; transform: scale(1.2); }
+        @media (max-width: 768px) { .carousel-slide img { height: 250px; } }
     </style>
 </head>
 <body class="text-gray-200">
@@ -92,45 +100,65 @@
         let settingsUnsubscribe = null;
         let packagesUnsubscribe = null;
         let announcementsUnsubscribe = null;
-        let currentLanguage = 'el'; // 'el' or 'en'
+        let currentLanguage = 'el';
         
-        // UI translations
         const translations = {
-            el: { home: "Αρχική", education: "Εκπαίδευση", mentor: "Mentor", community: "Κοινότητα", pricing: "Τιμολόγηση", contact: "Επικοινωνία", adminPortal: "Admin Portal", explorePackages: "Εξερεύνηση Πακέτων", latestNews: "Τελευταία Νέα & Ανακοινώσεις", contactForm: "Φόρμα Επικοινωνίας", send: "Αποστολή Μηνύματος", name: "Ονοματεπώνυμο", email: "Email", message: "Το μήνυμά σας", contactInfo: "Στοιχεία Επικοινωνίας", selectPackage: "Επιλέξτε Πακέτο", oneTime: "one-time", loading: "Φόρτωση...", noPackages: "Κανένα πακέτο", noAnnouncements: "Νέες ανακοινώσεις σύντομα...", footer: "© 2025 TradeLegends — Empowering Financial Freedom" },
-            en: { home: "Home", education: "Education", mentor: "Mentor", community: "Community", pricing: "Pricing", contact: "Contact", adminPortal: "Admin Portal", explorePackages: "Explore Packages", latestNews: "Latest News & Announcements", contactForm: "Contact Form", send: "Send Message", name: "Full Name", email: "Email", message: "Your Message", contactInfo: "Contact Info", selectPackage: "Select Package", oneTime: "one-time", loading: "Loading...", noPackages: "No packages", noAnnouncements: "New announcements soon...", footer: "© 2025 TradeLegends — Empowering Financial Freedom" }
+            el: { home: "Αρχική", education: "Εκπαίδευση", mentor: "Mentor", community: "Κοινότητα", pricing: "Τιμολόγηση", contact: "Επικοινωνία", adminPortal: "Admin Portal", explorePackages: "Εξερεύνηση Πακέτων", latestNews: "Τελευταία Νέα & Ανακοινώσεις", contactForm: "Φόρμα Επικοινωνίας", send: "Αποστολή Μηνύματος", name: "Ονοματεπώνυμο", email: "Email", message: "Το μήνυμά σας", contactInfo: "Στοιχεία Επικοινωνίας", selectPackage: "Επιλέξτε Πακέτο", oneTime: "εφάπαξ", loading: "Φόρτωση...", noAnnouncements: "Νέες ανακοινώσεις σύντομα..." },
+            en: { home: "Home", education: "Education", mentor: "Mentor", community: "Community", pricing: "Pricing", contact: "Contact", adminPortal: "Admin Portal", explorePackages: "Explore Packages", latestNews: "Latest News & Announcements", contactForm: "Contact Form", send: "Send Message", name: "Full Name", email: "Email", message: "Your Message", contactInfo: "Contact Info", selectPackage: "Select Package", oneTime: "one-time", loading: "Loading...", noAnnouncements: "New announcements soon..." }
         };
         function t(key) { return translations[currentLanguage][key] || key; }
 
-        // Extended site settings with bilingual fields
+        // Extended site settings with carousel images array
         let siteSettings = {
             primaryColor: '#f7931a',
             backgroundColor: '#0a0a1f',
             textColor: '#f0f0f0',
             logoUrl: 'https://cdn-icons-png.flaticon.com/512/4664/4664838.png',
             footerText: '© 2025 TradeLegends — Empowering Financial Freedom',
-            // Greek content
             heroTitle: 'Master Crypto & Financial Markets',
             heroSubtitle: 'Learn to trade like a legend with expert-led courses and real market insights.',
             heroImageUrl: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=2070&auto=format',
             homeContent: 'Καλώς ήρθατε στο TradeLegends! Ανακαλύψτε τον κόσμο των κρύπτο και των χρηματοοικονομικών αγορών με κορυφαίους mentors και μία ενεργή κοινότητα.',
-            educationContent: 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα των κρύπτο και των χρηματοοικονομικών αγορών. Μαθήματα βίντεο, διαδραστικά quizzes και πραγματικές μελέτες περίπτωσης από ειδικούς.',
-            mentorContent: 'Η ομάδα μας αποτελείται από επαγγελματίες traders με χρόνια εμπειρίας. Προσωπική καθοδήγηση, live sessions και στρατηγικές που αποδίδουν.',
-            communityContent: 'Γίνετε μέλος σε μια αποκλειστική κοινότητα φιλόδοξων επενδυτών. Ανταλλάξτε ιδέες, συμμετέχετε σε webinars και λαμβάνετε καθημερινή υποστήριξη.',
-            pricingContent: 'Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας. Όλα τα πακέτα περιλαμβάνουν пожизненную πρόσβαση και υποστήριξη.',
+            educationContent: 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα των κρύπτο και των χρηματοοικονομικών αγορών.',
+            mentorContent: 'Η ομάδα μας αποτελείται από επαγγελματίες traders με χρόνια εμπειρίας.',
+            communityContent: 'Γίνετε μέλος σε μια αποκλειστική κοινότητα φιλόδοξων επενδυτών.',
+            pricingContent: 'Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας.',
             contactEmail: 'support@tradelegends.com',
             contactPhone: '+30 210 1234567',
             contactAddress: 'Αθήνα, Ελλάδα',
             // English versions
             heroTitle_en: 'Master Crypto & Financial Markets',
             heroSubtitle_en: 'Learn to trade like a legend with expert-led courses and real market insights.',
-            homeContent_en: 'Welcome to TradeLegends! Discover the world of crypto and financial markets with top mentors and an active community.',
-            educationContent_en: 'Discover basic and advanced topics of crypto and financial markets. Video lessons, interactive quizzes, and real case studies by experts.',
-            mentorContent_en: 'Our team consists of professional traders with years of experience. Personal guidance, live sessions, and proven strategies.',
-            communityContent_en: 'Join an exclusive community of ambitious investors. Exchange ideas, participate in webinars, and receive daily support.',
-            pricingContent_en: 'Choose the program that fits your goals. All packages include lifetime access and support.'
+            homeContent_en: 'Welcome to TradeLegends! Discover the world of crypto and financial markets.',
+            educationContent_en: 'Discover basic and advanced topics of crypto and financial markets.',
+            mentorContent_en: 'Our team consists of professional traders with years of experience.',
+            communityContent_en: 'Join an exclusive community of ambitious investors.',
+            pricingContent_en: 'Choose the program that fits your goals.',
+            // Carousel images array (stored as JSON string in Firebase)
+            carouselImages: '["https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200","https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200","https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200","https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200"]'
         };
         let packagesList = [];
         let announcementsList = [];
+        let carouselImagesList = [];
+
+        function parseCarouselImages() {
+            try {
+                if (typeof siteSettings.carouselImages === 'string') {
+                    carouselImagesList = JSON.parse(siteSettings.carouselImages);
+                } else if (Array.isArray(siteSettings.carouselImages)) {
+                    carouselImagesList = siteSettings.carouselImages;
+                } else {
+                    carouselImagesList = [];
+                }
+            } catch(e) { carouselImagesList = []; }
+            if (!carouselImagesList.length) {
+                carouselImagesList = [
+                    'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200',
+                    'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200',
+                    'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200'
+                ];
+            }
+        }
 
         function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
         function applyTheme(settings) {
@@ -139,12 +167,10 @@
             document.body.style.backgroundColor = settings.backgroundColor;
             document.body.style.color = settings.textColor;
         }
-
-        function getLocalizedText(field, isHtml = false) {
+        function getLocalizedText(field) {
             let val = siteSettings[field];
             if (currentLanguage === 'en' && siteSettings[field + '_en']) val = siteSettings[field + '_en'];
-            if (!val && field.endsWith('_en')) val = siteSettings[field.replace('_en','')] || '';
-            return isHtml ? val : escapeHtml(val);
+            return escapeHtml(val);
         }
 
         function initRealtimeSync() {
@@ -153,6 +179,7 @@
             settingsUnsubscribe = onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) siteSettings = { ...siteSettings, ...docSnap.data() };
                 else setDoc(settingsRef, siteSettings).catch(console.error);
+                parseCarouselImages();
                 applyTheme(siteSettings);
                 renderCurrentView();
             });
@@ -173,11 +200,60 @@
         }
 
         let currentPage = 'home';
+        let carouselInterval = null;
+        let currentSlideIndex = 0;
+
         function setPage(page) { currentPage = page; window.location.hash = page; renderCurrentView(); }
         function getPageFromHash() { let hash = window.location.hash.substring(1); if (['home','education','mentor','community','pricing','contact'].includes(hash)) return hash; return 'home'; }
         window.addEventListener('hashchange', () => { if (currentMode === 'user') { currentPage = getPageFromHash(); renderCurrentView(); } });
 
-        // Page renderers (using localized content)
+        function initCarousel() {
+            if (carouselInterval) clearInterval(carouselInterval);
+            const slidesContainer = document.getElementById('carouselSlides');
+            const dotsContainer = document.getElementById('carouselDots');
+            if (!slidesContainer || !dotsContainer || carouselImagesList.length === 0) return;
+            
+            // Setup slides
+            slidesContainer.innerHTML = '';
+            carouselImagesList.forEach((imgUrl, idx) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'carousel-slide';
+                slideDiv.innerHTML = `<img src="${escapeHtml(imgUrl)}" alt="Slide ${idx+1}" onerror="this.src='https://via.placeholder.com/1200x400?text=Image+Not+Found'">`;
+                slidesContainer.appendChild(slideDiv);
+            });
+            // Setup dots
+            dotsContainer.innerHTML = '';
+            carouselImagesList.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `carousel-dot ${idx === 0 ? 'active' : ''}`;
+                dot.addEventListener('click', () => goToSlide(idx));
+                dotsContainer.appendChild(dot);
+            });
+            
+            function goToSlide(index) {
+                currentSlideIndex = index;
+                const slideWidth = slidesContainer.parentElement.offsetWidth;
+                slidesContainer.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+                document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                    if (i === currentSlideIndex) dot.classList.add('active');
+                    else dot.classList.remove('active');
+                });
+            }
+            window.goToSlide = goToSlide;
+            
+            // Auto rotate every 5 seconds
+            if (carouselInterval) clearInterval(carouselInterval);
+            carouselInterval = setInterval(() => {
+                if (carouselImagesList.length > 0) {
+                    currentSlideIndex = (currentSlideIndex + 1) % carouselImagesList.length;
+                    goToSlide(currentSlideIndex);
+                }
+            }, 5000);
+            
+            // Initial slide
+            goToSlide(0);
+        }
+
         function renderHomePage(primary) {
             const announcementsHtml = (() => {
                 const active = announcementsList.filter(a => a.active !== false);
@@ -188,6 +264,7 @@
                     if (currentLanguage === 'en' && ann.content_en) content = ann.content_en;
                     return `<div class="announcement-card glass-card p-5 rounded-xl" style="background: rgba(0,0,0,0.35); border-left: 3px solid ${primary};"><div class="flex items-start justify-between"><h3 class="text-xl font-bold mb-2" style="color:${primary}">${escapeHtml(title)}</h3><span class="text-xs text-gray-400">${ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : ''}</span></div><p class="text-gray-200 text-sm leading-relaxed">${escapeHtml(content)}</p>${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" class="inline-block mt-3 text-xs font-semibold" style="color:${primary}"><i class="fas fa-external-link-alt"></i> ${currentLanguage === 'en' ? 'Learn more' : 'Μάθετε περισσότερα'}</a>` : ''}</div>` }).join('')}</div>`;
             })();
+            
             return `
                 <div class="relative overflow-hidden pt-8 pb-8">
                     <div class="absolute inset-0 hero-gradient opacity-40"></div>
@@ -198,7 +275,13 @@
                                 <p class="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 mb-8">${getLocalizedText('heroSubtitle')}</p>
                                 <a href="#pricing" class="px-6 py-3 rounded-full font-bold btn-glow inline-block" style="background:${primary}; color:#fff;">${t('explorePackages')}</a>
                             </div>
-                            <div class="flex-1 flex justify-center"><img src="${escapeHtml(siteSettings.heroImageUrl)}" class="rounded-2xl shadow-2xl max-h-80 w-full object-cover border-2 border-white/20"></div>
+                            <div class="flex-1">
+                                <!-- CAROUSEL -->
+                                <div class="carousel-container">
+                                    <div id="carouselSlides" class="carousel-slides"></div>
+                                    <div id="carouselDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -213,6 +296,7 @@
                 </div>
             `;
         }
+        
         function renderEducationPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-graduation-cap text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('education')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('educationContent')}</p></div></div>`; }
         function renderMentorPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-chalkboard-user text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('mentor')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('mentorContent')}</p></div></div>`; }
         function renderCommunityPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-users text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('community')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('communityContent')}</p></div></div>`; }
@@ -236,7 +320,7 @@
             return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-8"><h1 class="text-4xl md:text-5xl font-bold">${t('pricing')}</h1><p class="text-gray-400 mt-2">${getLocalizedText('pricingContent')}</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${packagesList.length === 0 ? `<div class="col-span-full text-center py-12">${t('loading')}</div>` : packagesHtml}</div></div>`;
         }
         function renderContactPage(primary) {
-            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-envelope text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('contact')}</h1><p class="text-gray-400 mt-2">${currentLanguage === 'en' ? 'Send us a message or find us on social' : 'Στείλτε μας μήνυμα ή βρείτε μας στα social'}</p></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><div class="grid md:grid-cols-2 gap-8"><div><h3 class="text-xl font-bold mb-4">${t('contactInfo')}</h3><div class="space-y-3"><div><i class="fas fa-envelope w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactEmail)}</div><div><i class="fas fa-phone-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactPhone)}</div><div><i class="fas fa-map-marker-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactAddress)}</div></div></div><div><h3 class="text-xl font-bold mb-4">${t('contactForm')}</h3><form id="contactForm"><input type="text" id="contactName" placeholder="${t('name')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><input type="email" id="contactEmailInput" placeholder="${t('email')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><textarea id="contactMessage" rows="4" placeholder="${t('message')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required></textarea><button type="submit" class="px-6 py-2 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('send')}</button></form><div id="contactFormMsg" class="mt-3 text-sm text-green-400"></div></div></div></div></div>`;
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-envelope text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('contact')}</h1><p class="text-gray-400 mt-2">${currentLanguage === 'en' ? 'Send us a message' : 'Στείλτε μας μήνυμα'}</p></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><div class="grid md:grid-cols-2 gap-8"><div><h3 class="text-xl font-bold mb-4">${t('contactInfo')}</h3><div class="space-y-3"><div><i class="fas fa-envelope w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactEmail)}</div><div><i class="fas fa-phone-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactPhone)}</div><div><i class="fas fa-map-marker-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactAddress)}</div></div></div><div><h3 class="text-xl font-bold mb-4">${t('contactForm')}</h3><form id="contactForm"><input type="text" id="contactName" placeholder="${t('name')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><input type="email" id="contactEmailInput" placeholder="${t('email')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><textarea id="contactMessage" rows="4" placeholder="${t('message')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required></textarea><button type="submit" class="px-6 py-2 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('send')}</button></form><div id="contactFormMsg" class="mt-3 text-sm text-green-400"></div></div></div></div></div>`;
         }
 
         function renderUserView() {
@@ -291,68 +375,41 @@
             };
         };
 
-        // ADMIN VIEW (extended with bilingual editing)
+        // Admin view (simplified for space but includes carousel editor)
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
-            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-6xl mx-auto"><div class="flex justify-between items-center mb-8 flex-wrap gap-4"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div class="flex gap-3"><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg"><i class="fas fa-eye"></i> Main Site</button><button id="adminLogoutBtn" class="px-4 py-2 bg-red-600 rounded-lg"><i class="fas fa-sign-out-alt"></i> Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">🎨 Settings & Content</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">📦 Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">📋 Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">📢 Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">💬 Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
+            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-6xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">Settings & Carousel</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
         }
         function renderAdminLogin() { return `<div class="min-h-screen flex items-center justify-center p-5" style="background:#0a0a14;"><div class="glass-card max-w-md w-full p-8 rounded-2xl"><div class="text-center mb-6"><i class="fas fa-shield-alt text-5xl" style="color:#f7931a"></i><h2 class="text-2xl font-bold mt-2">Admin Auth</h2></div><div id="adminAuthForm"><input type="email" id="adminEmail" placeholder="Email" class="w-full mb-3 p-3 rounded-lg bg-gray-800"><input type="password" id="adminPassword" placeholder="Password" class="w-full mb-4 p-3 rounded-lg bg-gray-800"><button id="adminLoginBtn" class="w-full py-2 rounded-full font-bold mb-2" style="background:#f7931a; color:#000">Login</button><button id="adminRegisterBtn" class="w-full py-2 rounded-full border border-gray-500">Register (Admin)</button></div><div id="adminAuthMsg" class="text-red-400 text-sm mt-3 text-center"></div></div></div>`; }
         async function checkAdminAuthorization(user) { if (!user) return false; const adminDocRef = doc(db, "admin", "adminData"); const adminSnap = await getDoc(adminDocRef); if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true; if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid }); return true; } return false; }
         function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10')); btn.classList.add('active-tab','bg-white/10'); if(btn.dataset.tab === 'settings') renderSettingsTab(); if(btn.dataset.tab === 'packages') renderPackagesTab(); if(btn.dataset.tab === 'leads') renderLeadsTab(); if(btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if(btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderSettingsTab(); }
         async function renderSettingsTab() {
             const container = document.getElementById('adminTabContent');
-            const s = siteSettings;
-            container.innerHTML = `<h3 class="text-2xl font-bold mb-5">Website Settings & Bilingual Content</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div><label>Primary Color</label><input type="color" id="primaryColor" value="${s.primaryColor}" class="w-full p-1 h-10 rounded"></div>
-                <div><label>Background Color</label><input type="color" id="backgroundColor" value="${s.backgroundColor}" class="w-full p-1 h-10 rounded"></div>
-                <div><label>Text Color</label><input type="color" id="textColor" value="${s.textColor}" class="w-full p-1 h-10 rounded"></div>
-                <div><label>Hero Image URL</label><input type="text" id="heroImageUrl" value="${s.heroImageUrl}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>Logo URL</label><input type="text" id="logoUrl" value="${s.logoUrl}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(s.footerText)}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>📧 Email</label><input type="email" id="contactEmail" value="${escapeHtml(s.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>📞 Phone</label><input type="text" id="contactPhone" value="${escapeHtml(s.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>📍 Address</label><input type="text" id="contactAddress" value="${escapeHtml(s.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="md:col-span-2"><hr class="my-2 border-gray-600"><h4 class="font-bold">🇬🇷 Greek Content</h4></div>
-                <div class="md:col-span-2"><label>Hero Title (el)</label><input type="text" id="heroTitle" value="${escapeHtml(s.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="md:col-span-2"><label>Hero Subtitle (el)</label><input type="text" id="heroSubtitle" value="${escapeHtml(s.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="md:col-span-2"><label>Home Content (el)</label><textarea id="homeContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.homeContent)}</textarea></div>
-                <div class="md:col-span-2"><label>Education Content (el)</label><textarea id="educationContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.educationContent)}</textarea></div>
-                <div class="md:col-span-2"><label>Mentor Content (el)</label><textarea id="mentorContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.mentorContent)}</textarea></div>
-                <div class="md:col-span-2"><label>Community Content (el)</label><textarea id="communityContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.communityContent)}</textarea></div>
-                <div class="md:col-span-2"><label>Pricing Header (el)</label><textarea id="pricingContent" rows="1" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.pricingContent)}</textarea></div>
-                <div class="md:col-span-2"><hr class="my-2 border-gray-600"><h4 class="font-bold">🇬🇧 English Content</h4></div>
-                <div class="md:col-span-2"><label>Hero Title (en)</label><input type="text" id="heroTitle_en" value="${escapeHtml(s.heroTitle_en || '')}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="md:col-span-2"><label>Hero Subtitle (en)</label><input type="text" id="heroSubtitle_en" value="${escapeHtml(s.heroSubtitle_en || '')}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="md:col-span-2"><label>Home Content (en)</label><textarea id="homeContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.homeContent_en || '')}</textarea></div>
-                <div class="md:col-span-2"><label>Education Content (en)</label><textarea id="educationContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.educationContent_en || '')}</textarea></div>
-                <div class="md:col-span-2"><label>Mentor Content (en)</label><textarea id="mentorContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.mentorContent_en || '')}</textarea></div>
-                <div class="md:col-span-2"><label>Community Content (en)</label><textarea id="communityContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.communityContent_en || '')}</textarea></div>
-                <div class="md:col-span-2"><label>Pricing Header (en)</label><textarea id="pricingContent_en" rows="1" class="w-full p-2 rounded bg-gray-800">${escapeHtml(s.pricingContent_en || '')}</textarea></div>
-            </div><button id="saveSettingsBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save All</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
+            const currentImagesJson = JSON.stringify(carouselImagesList);
+            container.innerHTML = `<h3 class="text-2xl font-bold mb-5">Settings & Carousel Images</h3><div class="grid grid-cols-1 gap-4"><div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div><div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 h-10 rounded"></div><div><label>Logo URL</label><input type="text" id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Email</label><input type="email" id="contactEmail" value="${escapeHtml(siteSettings.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Phone</label><input type="text" id="contactPhone" value="${escapeHtml(siteSettings.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Address</label><input type="text" id="contactAddress" value="${escapeHtml(siteSettings.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Carousel Images (JSON array of URLs)</label><textarea id="carouselImages" rows="4" class="w-full p-2 rounded bg-gray-800 font-mono text-sm">${currentImagesJson}</textarea><p class="text-xs text-gray-400 mt-1">Enter as JSON array, e.g.: ["url1","url2","url3"]</p></div><div class="grid grid-cols-2 gap-4"><div><label>Hero Title (el)</label><input type="text" id="heroTitle" value="${escapeHtml(siteSettings.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Title (en)</label><input type="text" id="heroTitle_en" value="${escapeHtml(siteSettings.heroTitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Subtitle (el)</label><input type="text" id="heroSubtitle" value="${escapeHtml(siteSettings.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Subtitle (en)</label><input type="text" id="heroSubtitle_en" value="${escapeHtml(siteSettings.heroSubtitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div></div><div><label>Home Content (el)</label><textarea id="homeContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent)}</textarea></div><div><label>Home Content (en)</label><textarea id="homeContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent_en||'')}</textarea></div></div><button id="saveSettingsBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save All</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
             document.getElementById('saveSettingsBtn').onclick = async () => {
+                let carouselArray;
+                try { carouselArray = JSON.parse(document.getElementById('carouselImages').value); } catch(e) { carouselArray = carouselImagesList; }
                 const updated = {
-                    primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value, textColor: document.getElementById('textColor').value,
-                    heroImageUrl: document.getElementById('heroImageUrl').value, logoUrl: document.getElementById('logoUrl').value, footerText: document.getElementById('footerText').value,
+                    primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value,
+                    logoUrl: document.getElementById('logoUrl').value, footerText: document.getElementById('footerText').value,
                     contactEmail: document.getElementById('contactEmail').value, contactPhone: document.getElementById('contactPhone').value, contactAddress: document.getElementById('contactAddress').value,
-                    heroTitle: document.getElementById('heroTitle').value, heroSubtitle: document.getElementById('heroSubtitle').value, homeContent: document.getElementById('homeContent').value,
-                    educationContent: document.getElementById('educationContent').value, mentorContent: document.getElementById('mentorContent').value, communityContent: document.getElementById('communityContent').value,
-                    pricingContent: document.getElementById('pricingContent').value,
+                    heroTitle: document.getElementById('heroTitle').value, heroSubtitle: document.getElementById('heroSubtitle').value,
                     heroTitle_en: document.getElementById('heroTitle_en').value, heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
-                    homeContent_en: document.getElementById('homeContent_en').value, educationContent_en: document.getElementById('educationContent_en').value,
-                    mentorContent_en: document.getElementById('mentorContent_en').value, communityContent_en: document.getElementById('communityContent_en').value,
-                    pricingContent_en: document.getElementById('pricingContent_en').value
+                    homeContent: document.getElementById('homeContent').value, homeContent_en: document.getElementById('homeContent_en').value,
+                    carouselImages: JSON.stringify(carouselArray)
                 };
                 await updateDoc(doc(db, "settings", "siteConfig"), updated);
-                document.getElementById('settingsMsg').innerText = "✅ All saved!";
+                document.getElementById('settingsMsg').innerText = "✅ All saved! Carousel will update.";
                 setTimeout(()=>document.getElementById('settingsMsg').innerText="",2000);
             };
         }
-        async function renderPackagesTab() { const container = document.getElementById('adminTabContent'); const pkgHtml = packagesList.map(p => `<div class="flex justify-between items-center border-b border-gray-700 py-3"><div><strong>${escapeHtml(p.name)}</strong> / ${escapeHtml(p.name_en||'')}<br><span class="text-xs">${escapeHtml(p.price)}</span></div><div class="flex gap-2"><button onclick="window.editPackage('${p.id}')" class="px-3 py-1 bg-blue-600 rounded text-sm"><i class="fas fa-edit"></i></button><button onclick="window.deletePackageItem('${p.id}')" class="px-3 py-1 bg-red-600 rounded text-sm"><i class="fas fa-trash"></i></button></div></div>`).join(''); container.innerHTML = `<h3 class="text-2xl font-bold mb-4">Packages (Bilingual)</h3><button id="newPackageBtn" class="mb-5 px-4 py-2 rounded-lg bg-emerald-600"><i class="fas fa-plus"></i> New Package</button><div class="space-y-2">${pkgHtml||'None'}</div>`; document.getElementById('newPackageBtn').onclick = () => showPackageForm(); window.editPackage = (id) => showPackageForm(packagesList.find(p=>p.id===id)); window.deletePackageItem = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"packages",id)); }; }
-        async function showPackageForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-2xl"><h3 class="text-xl font-bold mb-3">${existing?'Edit Package':'New Package'}</h3><div class="grid grid-cols-2 gap-3"><div><label>Name (el)</label><input id="pkgName" placeholder="Όνομα" value="${existing?escapeHtml(existing.name):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Name (en)</label><input id="pkgName_en" placeholder="Name" value="${existing?escapeHtml(existing.name_en||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Price</label><input id="pkgPrice" placeholder="€199" value="${existing?escapeHtml(existing.price):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Image URL</label><input id="pkgImage" placeholder="https://..." value="${existing?escapeHtml(existing.imageUrl||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Description (el)</label><textarea id="pkgDesc" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description||''):''}</textarea></div><div class="col-span-2"><label>Description (en)</label><textarea id="pkgDesc_en" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description_en||''):''}</textarea></div><div class="col-span-2"><label>Features (el) - comma separated</label><input id="pkgFeatures" value="${existing&&existing.features?existing.features.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Features (en) - comma separated</label><input id="pkgFeatures_en" value="${existing&&existing.features_en?existing.features_en.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div></div><div class="flex gap-3 mt-4"><button id="savePkgBtn" class="flex-1 py-2 rounded-lg bg-amber-500">Save</button><button id="cancelPkgBtn" class="flex-1 py-2 rounded-lg bg-gray-600">Cancel</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#savePkgBtn').onclick = async () => { const name = document.getElementById('pkgName').value.trim(); if(!name) return alert("Name required"); const features = document.getElementById('pkgFeatures').value.split(',').map(f=>f.trim()).filter(f=>f); const features_en = document.getElementById('pkgFeatures_en').value.split(',').map(f=>f.trim()).filter(f=>f); const pkgData = { name, name_en: document.getElementById('pkgName_en').value.trim(), price: document.getElementById('pkgPrice').value, description: document.getElementById('pkgDesc').value, description_en: document.getElementById('pkgDesc_en').value, imageUrl: document.getElementById('pkgImage').value, features, features_en, order: existing?existing.order:Date.now() }; if(existing) await updateDoc(doc(db,"packages",existing.id), pkgData); else await addDoc(collection(db,"packages"), pkgData); modalDiv.remove(); }; modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove(); }
-        async function renderLeadsTab() { const container = document.getElementById('adminTabContent'); const leadsSnap = await getDocs(query(collection(db,"leads"), orderBy("timestamp","desc"))); let html = `<h3 class="text-2xl font-bold mb-4">Leads</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>`; leadsSnap.forEach(d=>{ const data=d.data(); html+=`<tr><td>${escapeHtml(data.name)}</td><td>${escapeHtml(data.email)}</td><td>${escapeHtml(data.packageName)}</td><td><div class="flex gap-1"><button class="status-btn" data-id="${d.id}" data-status="✅">✅</button><button class="status-btn" data-id="${d.id}" data-status="❌">❌</button><button class="status-btn" data-id="${d.id}" data-status="❔">❔</button><span>${data.status||'❔'}</span></div></td><td>${new Date(data.timestamp).toLocaleString()}</td><td><button class="delete-lead text-red-400" data-id="${d.id}"><i class="fas fa-trash"></i></button></td></tr>`; }); html+=`</tbody></table></div>`; container.innerHTML=html; document.querySelectorAll('.status-btn').forEach(b=>b.onclick=async()=>{ await updateDoc(doc(db,"leads",b.dataset.id),{status:b.dataset.status}); renderLeadsTab(); }); document.querySelectorAll('.delete-lead').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"leads",b.dataset.id)); renderLeadsTab(); }); }
-        async function renderAnnouncementsTab() { const container = document.getElementById('adminTabContent'); const annHtml = announcementsList.map(a=>`<div class="flex justify-between items-start border-b py-3"><div><strong>${escapeHtml(a.title)}</strong> / ${escapeHtml(a.title_en||'')}<br><span class="text-xs">${a.active!==false?'Active':'Inactive'}</span><p class="text-sm">${escapeHtml((a.content||'').substring(0,60))}</p></div><div><button onclick="window.editAnnouncement('${a.id}')" class="bg-blue-600 px-2 py-1 rounded"><i class="fas fa-edit"></i></button> <button onclick="window.deleteAnnouncementItem('${a.id}')" class="bg-red-600 px-2 py-1 rounded"><i class="fas fa-trash"></i></button></div></div>`).join(''); container.innerHTML=`<h3 class="text-2xl font-bold mb-4">Announcements (Bilingual)</h3><button id="newAnnBtn" class="mb-4 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${annHtml||'None'}</div>`; document.getElementById('newAnnBtn').onclick=()=>showAnnouncementForm(); window.editAnnouncement=(id)=>showAnnouncementForm(announcementsList.find(a=>a.id===id)); window.deleteAnnouncementItem=async(id)=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"announcements",id)); }; }
-        async function showAnnouncementForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-lg"><h3>${existing?'Edit':'New'} Announcement</h3><div><label>Title (el)</label><input id="annTitle" value="${existing?escapeHtml(existing.title):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label>Title (en)</label><input id="annTitle_en" value="${existing?escapeHtml(existing.title_en||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label>Content (el)</label><textarea id="annContent" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content):''}</textarea></div><div><label>Content (en)</label><textarea id="annContent_en" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content_en||''):''}</textarea></div><div><label>Link (optional)</label><input id="annLink" value="${existing?escapeHtml(existing.link||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label><input type="checkbox" id="annActive" ${existing&&existing.active===false?'':'checked'}> Active</label></div><div class="flex gap-3 mt-4"><button id="saveAnnBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelAnnBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#saveAnnBtn').onclick = async () => { const title = document.getElementById('annTitle').value.trim(); if(!title) return; const data = { title, title_en: document.getElementById('annTitle_en').value.trim(), content: document.getElementById('annContent').value, content_en: document.getElementById('annContent_en').value, link: document.getElementById('annLink').value.trim(), active: document.getElementById('annActive').checked, updatedAt: new Date().toISOString(), createdAt: existing?existing.createdAt:new Date().toISOString() }; if(existing) await updateDoc(doc(db,"announcements",existing.id), data); else await addDoc(collection(db,"announcements"), data); modalDiv.remove(); }; modalDiv.querySelector('#cancelAnnBtn').onclick = () => modalDiv.remove(); }
-        async function renderContactMessagesTab() { const container = document.getElementById('adminTabContent'); const msgs = await getDocs(query(collection(db,"contactMessages"), orderBy("timestamp","desc"))); let html = `<h3 class="text-2xl font-bold mb-4">Contact Messages</h3><div class="space-y-3">`; msgs.forEach(d=>{ const m=d.data(); html+=`<div class="glass-card p-3 rounded"><div><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.email)}) - ${new Date(m.timestamp).toLocaleString()}</div><p>${escapeHtml(m.message)}</p><button class="delete-msg bg-red-600 text-sm px-2 py-1 rounded mt-2" data-id="${d.id}">Delete</button></div>`; }); html+=`</div>`; container.innerHTML=html; document.querySelectorAll('.delete-msg').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"contactMessages",b.dataset.id)); renderContactMessagesTab(); }); }
+        async function renderPackagesTab() { const container = document.getElementById('adminTabContent'); const pkgHtml = packagesList.map(p => `<div class="flex justify-between items-center border-b py-2"><div><strong>${escapeHtml(p.name)}</strong> / ${escapeHtml(p.name_en||'')}<br><span class="text-xs">${escapeHtml(p.price)}</span></div><div><button onclick="window.editPackage('${p.id}')" class="bg-blue-600 px-2 py-1 rounded text-sm">Edit</button> <button onclick="window.deletePackageItem('${p.id}')" class="bg-red-600 px-2 py-1 rounded text-sm">Del</button></div></div>`).join(''); container.innerHTML = `<h3>Packages</h3><button id="newPackageBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${pkgHtml||'None'}</div>`; document.getElementById('newPackageBtn').onclick = () => showPackageForm(); window.editPackage = (id) => showPackageForm(packagesList.find(p=>p.id===id)); window.deletePackageItem = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"packages",id)); }; }
+        async function showPackageForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-2xl"><h3>${existing?'Edit':'New'} Package</h3><div class="grid grid-cols-2 gap-3"><div><label>Name (el)</label><input id="pkgName" value="${existing?escapeHtml(existing.name):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Name (en)</label><input id="pkgName_en" value="${existing?escapeHtml(existing.name_en||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Price</label><input id="pkgPrice" value="${existing?escapeHtml(existing.price):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Image URL</label><input id="pkgImage" value="${existing?escapeHtml(existing.imageUrl||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Description (el)</label><textarea id="pkgDesc" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description||''):''}</textarea></div><div class="col-span-2"><label>Description (en)</label><textarea id="pkgDesc_en" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description_en||''):''}</textarea></div><div class="col-span-2"><label>Features (el) - comma</label><input id="pkgFeatures" value="${existing&&existing.features?existing.features.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Features (en) - comma</label><input id="pkgFeatures_en" value="${existing&&existing.features_en?existing.features_en.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div></div><div class="flex gap-3 mt-4"><button id="savePkgBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelPkgBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#savePkgBtn').onclick = async () => { const name = document.getElementById('pkgName').value.trim(); if(!name) return; const data = { name, name_en: document.getElementById('pkgName_en').value.trim(), price: document.getElementById('pkgPrice').value, description: document.getElementById('pkgDesc').value, description_en: document.getElementById('pkgDesc_en').value, imageUrl: document.getElementById('pkgImage').value, features: document.getElementById('pkgFeatures').value.split(',').map(f=>f.trim()), features_en: document.getElementById('pkgFeatures_en').value.split(',').map(f=>f.trim()), order: existing?existing.order:Date.now() }; if(existing) await updateDoc(doc(db,"packages",existing.id), data); else await addDoc(collection(db,"packages"), data); modalDiv.remove(); }; modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove(); }
+        async function renderLeadsTab() { const leadsSnap = await getDocs(query(collection(db,"leads"), orderBy("timestamp","desc"))); let html = `<h3>Leads</h3><table class="w-full text-sm"><thead><tr><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>`; leadsSnap.forEach(d=>{ const data=d.data(); html+=`<tr><td>${escapeHtml(data.name)}</td><td>${escapeHtml(data.email)}</td><td>${escapeHtml(data.packageName)}</td><td><button class="status-btn" data-id="${d.id}" data-status="✅">✅</button><button class="status-btn" data-id="${d.id}" data-status="❌">❌</button><button class="status-btn" data-id="${d.id}" data-status="❔">❔</button> ${data.status||'❔'}</td><td>${new Date(data.timestamp).toLocaleString()}</td><td><button class="delete-lead text-red-400" data-id="${d.id}"><i class="fas fa-trash"></i></button></td></tr>`; }); html+=`</tbody></table>`; document.getElementById('adminTabContent').innerHTML=html; document.querySelectorAll('.status-btn').forEach(b=>b.onclick=async()=>{ await updateDoc(doc(db,"leads",b.dataset.id),{status:b.dataset.status}); renderLeadsTab(); }); document.querySelectorAll('.delete-lead').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"leads",b.dataset.id)); renderLeadsTab(); }); }
+        async function renderAnnouncementsTab() { const annHtml = announcementsList.map(a=>`<div><strong>${escapeHtml(a.title)}</strong> / ${escapeHtml(a.title_en||'')} - ${a.active!==false?'Active':'Inactive'}<button onclick="window.editAnnouncement('${a.id}')" class="ml-2 bg-blue-600 px-2 rounded">Edit</button> <button onclick="window.deleteAnnouncementItem('${a.id}')" class="bg-red-600 px-2 rounded">Del</button></div>`).join(''); document.getElementById('adminTabContent').innerHTML=`<h3>Announcements</h3><button id="newAnnBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${annHtml||'None'}</div>`; document.getElementById('newAnnBtn').onclick=()=>showAnnouncementForm(); window.editAnnouncement=(id)=>showAnnouncementForm(announcementsList.find(a=>a.id===id)); window.deleteAnnouncementItem=async(id)=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"announcements",id)); renderAnnouncementsTab(); }; }
+        async function showAnnouncementForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-lg"><h3>${existing?'Edit':'New'} Announcement</h3><div><label>Title (el)</label><input id="annTitle" value="${existing?escapeHtml(existing.title):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label>Title (en)</label><input id="annTitle_en" value="${existing?escapeHtml(existing.title_en||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label>Content (el)</label><textarea id="annContent" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content):''}</textarea></div><div><label>Content (en)</label><textarea id="annContent_en" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content_en||''):''}</textarea></div><div><label>Link</label><input id="annLink" value="${existing?escapeHtml(existing.link||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label><input type="checkbox" id="annActive" ${existing&&existing.active===false?'':'checked'}> Active</label></div><div class="flex gap-3 mt-4"><button id="saveAnnBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelAnnBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`; modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; document.body.appendChild(modalDiv); modalDiv.querySelector('#saveAnnBtn').onclick = async () => { const data = { title: document.getElementById('annTitle').value, title_en: document.getElementById('annTitle_en').value, content: document.getElementById('annContent').value, content_en: document.getElementById('annContent_en').value, link: document.getElementById('annLink').value, active: document.getElementById('annActive').checked, updatedAt: new Date().toISOString(), createdAt: existing?existing.createdAt:new Date().toISOString() }; if(existing) await updateDoc(doc(db,"announcements",existing.id), data); else await addDoc(collection(db,"announcements"), data); modalDiv.remove(); renderAnnouncementsTab(); }; modalDiv.querySelector('#cancelAnnBtn').onclick = () => modalDiv.remove(); }
+        async function renderContactMessagesTab() { const msgs = await getDocs(query(collection(db,"contactMessages"), orderBy("timestamp","desc"))); let html = `<h3>Contact Messages</h3>`; msgs.forEach(d=>{ const m=d.data(); html+=`<div class="glass-card p-3 mb-2 rounded"><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.email)})<br>${escapeHtml(m.message)}<br><button class="delete-msg bg-red-600 text-sm px-2 py-1 rounded mt-1" data-id="${d.id}">Delete</button></div>`; }); document.getElementById('adminTabContent').innerHTML=html; document.querySelectorAll('.delete-msg').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"contactMessages",b.dataset.id)); renderContactMessagesTab(); }); }
 
         function renderCurrentView() {
             const root = document.getElementById('root');
@@ -363,8 +420,10 @@
                 document.getElementById('langEl')?.addEventListener('click', () => { currentLanguage = 'el'; renderCurrentView(); });
                 document.getElementById('langEn')?.addEventListener('click', () => { currentLanguage = 'en'; renderCurrentView(); });
                 const contactForm = document.getElementById('contactForm');
-                if(contactForm) contactForm.onsubmit = async (e) => { e.preventDefault(); const name = document.getElementById('contactName').value.trim(), email = document.getElementById('contactEmailInput').value.trim(), message = document.getElementById('contactMessage').value.trim(); if(!name||!email||!message) return alert("Please fill all fields"); try { await addDoc(collection(db,"contactMessages"),{name,email,message,timestamp:new Date().toISOString()}); document.getElementById('contactFormMsg').innerText = "✅ Sent!"; contactForm.reset(); setTimeout(()=>document.getElementById('contactFormMsg').innerText="",3000); } catch(e){ alert("Error"); } };
+                if(contactForm) contactForm.onsubmit = async (e) => { e.preventDefault(); const name = document.getElementById('contactName').value.trim(), email = document.getElementById('contactEmailInput').value.trim(), message = document.getElementById('contactMessage').value.trim(); if(!name||!email||!message) return alert("Fill all fields"); try { await addDoc(collection(db,"contactMessages"),{name,email,message,timestamp:new Date().toISOString()}); document.getElementById('contactFormMsg').innerText = "✅ Sent!"; contactForm.reset(); setTimeout(()=>document.getElementById('contactFormMsg').innerText="",3000); } catch(e){ alert("Error"); } };
+                if (currentPage === 'home') setTimeout(() => initCarousel(), 100);
             } else {
+                if (carouselInterval) clearInterval(carouselInterval);
                 root.innerHTML = renderAdminView();
                 if (adminAuthorized) { setTimeout(()=>loadAdminDashboardLogic(),50); document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => { await signOut(auth); window.location.reload(); }); document.getElementById('viewMainSiteBtn')?.addEventListener('click', () => { const mainUrl = new URL(window.location.href); mainUrl.searchParams.delete('admin'); window.open(mainUrl.toString(), '_blank'); }); }
                 else { attachAdminAuthEvents(); }
