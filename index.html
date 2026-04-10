@@ -62,8 +62,16 @@
         .carousel-slide img { width: 100%; height: 400px; object-fit: cover; }
         .carousel-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; }
         .carousel-dot.active { background: white; transform: scale(1.2); }
-        @media (max-width: 768px) { .carousel-slide img { height: 250px; } }
+        .small-carousel-container { position: relative; overflow: hidden; border-radius: 1rem; box-shadow: 0 10px 20px -8px rgba(0,0,0,0.4); background: rgba(0,0,0,0.3); }
+        .small-carousel-slides { display: flex; transition: transform 0.5s ease-in-out; }
+        .small-carousel-slide { flex: 0 0 100%; }
+        .small-carousel-slide img { width: 100%; height: 180px; object-fit: cover; cursor: pointer; transition: transform 0.2s; }
+        .small-carousel-slide img:hover { transform: scale(1.02); }
+        .small-carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; margin: 0 3px; }
+        .small-carousel-dot.active { background: white; transform: scale(1.2); }
+        @media (max-width: 768px) { .carousel-slide img { height: 250px; } .small-carousel-slide img { height: 120px; } }
         .disclaimer-card { background: rgba(0,0,0,0.6); border-left: 4px solid #f7931a; font-size: 0.8rem; }
+        .links-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1.5rem; }
     </style>
 </head>
 <body class="text-gray-200">
@@ -103,12 +111,12 @@
         let currentLanguage = 'el';
         
         const translations = {
-            el: { home: "Αρχική", education: "Εκπαίδευση", mentor: "Mentor", community: "Κοινότητα", pricing: "Τιμολόγηση", contact: "Επικοινωνία", adminPortal: "Admin Portal", explorePackages: "Εξερεύνηση Πακέτων", latestNews: "Τελευταία Νέα & Ανακοινώσεις", contactForm: "Φόρμα Επικοινωνίας", send: "Αποστολή Μηνύματος", name: "Ονοματεπώνυμο", email: "Email", message: "Το μήνυμά σας", contactInfo: "Στοιχεία Επικοινωνίας", selectPackage: "Επιλέξτε Πακέτο", oneTime: "εφάπαξ", loading: "Φόρτωση...", noAnnouncements: "Νέες ανακοινώσεις σύντομα...", disclaimer: "⚠️ Σημαντική Αποποίηση Ευθύνης" },
-            en: { home: "Home", education: "Education", mentor: "Mentor", community: "Community", pricing: "Pricing", contact: "Contact", adminPortal: "Admin Portal", explorePackages: "Explore Packages", latestNews: "Latest News & Announcements", contactForm: "Contact Form", send: "Send Message", name: "Full Name", email: "Email", message: "Your Message", contactInfo: "Contact Info", selectPackage: "Select Package", oneTime: "one-time", loading: "Loading...", noAnnouncements: "New announcements soon...", disclaimer: "⚠️ Risk Disclaimer" }
+            el: { home: "Αρχική", education: "Εκπαίδευση", mentor: "Mentor", community: "Κοινότητα", pricing: "Τιμολόγηση", contact: "Επικοινωνία", adminPortal: "Admin Portal", explorePackages: "Εξερεύνηση Πακέτων", latestNews: "Τελευταία Νέα & Ανακοινώσεις", contactForm: "Φόρμα Επικοινωνίας", send: "Αποστολή Μηνύματος", name: "Ονοματεπώνυμο", email: "Email", message: "Το μήνυμά σας", contactInfo: "Στοιχεία Επικοινωνίας", selectPackage: "Επιλέξτε Πακέτο", oneTime: "εφάπαξ", loading: "Φόρτωση...", noAnnouncements: "Νέες ανακοινώσεις σύντομα...", disclaimer: "⚠️ Σημαντική Αποποίηση Ευθύνης", partnersLinks: "🔗 Χρήσιμοι Σύνδεσμοι & Συνεργάτες" },
+            en: { home: "Home", education: "Education", mentor: "Mentor", community: "Community", pricing: "Pricing", contact: "Contact", adminPortal: "Admin Portal", explorePackages: "Explore Packages", latestNews: "Latest News & Announcements", contactForm: "Contact Form", send: "Send Message", name: "Full Name", email: "Email", message: "Your Message", contactInfo: "Contact Info", selectPackage: "Select Package", oneTime: "one-time", loading: "Loading...", noAnnouncements: "New announcements soon...", disclaimer: "⚠️ Risk Disclaimer", partnersLinks: "🔗 Useful Links & Partners" }
         };
         function t(key) { return translations[currentLanguage][key] || key; }
 
-        // Extended site settings with disclaimer and carousel
+        // Extended site settings with main carousel and links carousel
         let siteSettings = {
             primaryColor: '#f7931a',
             backgroundColor: '#0a0a1f',
@@ -126,7 +134,6 @@
             contactEmail: 'support@tradelegends.com',
             contactPhone: '+30 210 1234567',
             contactAddress: 'Αθήνα, Ελλάδα',
-            // English versions
             heroTitle_en: 'Master Crypto & Financial Markets',
             heroSubtitle_en: 'Learn to trade like a legend with expert-led courses and real market insights.',
             homeContent_en: 'Welcome to TradeLegends! Discover the world of crypto and financial markets.',
@@ -134,15 +141,17 @@
             mentorContent_en: 'Our team consists of professional traders with years of experience.',
             communityContent_en: 'Join an exclusive community of ambitious investors.',
             pricingContent_en: 'Choose the program that fits your goals.',
-            // Carousel images array
+            // Main carousel images (hero area)
             carouselImages: '["https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200","https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200","https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200","https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200"]',
-            // Disclaimer text (bilingual)
+            // Links carousel (4 images with clickable URLs)
+            linksCarousel: '[{"image":"https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600","url":"https://www.binance.com"},{"image":"https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=600","url":"https://www.coinbase.com"},{"image":"https://images.unsplash.com/photo-1605792657660-596af9009e82?w=600","url":"https://www.tradingview.com"},{"image":"https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600","url":"https://www.coingecko.com"}]',
             disclaimerText: '⚠️ ΠΡΟΣΟΧΗ: Οι επενδύσεις σε κρύπτο και χρηματοοικονομικά προϊόντα ενέχουν υψηλό κίνδυνο. Οι προηγούμενες αποδόσεις δεν εγγυώνται μελλοντικά αποτελέσματα. Το TradeLegends παρέχει αποκλειστικά εκπαιδευτικό περιεχόμενο και όχι επενδυτικές συμβουλές. Συμβουλευτείτε πάντα έναν εξειδικευμένο σύμβουλο πριν προβείτε σε επένδυση.',
             disclaimerText_en: '⚠️ WARNING: Crypto and financial investments involve high risk. Past performance does not guarantee future results. TradeLegends provides educational content only, not investment advice. Always consult a qualified advisor before investing.'
         };
         let packagesList = [];
         let announcementsList = [];
         let carouselImagesList = [];
+        let linksCarouselList = []; // array of {image, url}
 
         function parseCarouselImages() {
             try {
@@ -150,15 +159,26 @@
                     carouselImagesList = JSON.parse(siteSettings.carouselImages);
                 } else if (Array.isArray(siteSettings.carouselImages)) {
                     carouselImagesList = siteSettings.carouselImages;
-                } else {
-                    carouselImagesList = [];
-                }
+                } else { carouselImagesList = []; }
             } catch(e) { carouselImagesList = []; }
             if (!carouselImagesList.length) {
-                carouselImagesList = [
-                    'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200',
-                    'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200',
-                    'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200'
+                carouselImagesList = ['https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200'];
+            }
+        }
+        function parseLinksCarousel() {
+            try {
+                if (typeof siteSettings.linksCarousel === 'string') {
+                    linksCarouselList = JSON.parse(siteSettings.linksCarousel);
+                } else if (Array.isArray(siteSettings.linksCarousel)) {
+                    linksCarouselList = siteSettings.linksCarousel;
+                } else { linksCarouselList = []; }
+            } catch(e) { linksCarouselList = []; }
+            if (!linksCarouselList.length) {
+                linksCarouselList = [
+                    {image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600', url: 'https://www.binance.com'},
+                    {image: 'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=600', url: 'https://www.coinbase.com'},
+                    {image: 'https://images.unsplash.com/photo-1605792657660-596af9009e82?w=600', url: 'https://www.tradingview.com'},
+                    {image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600', url: 'https://www.coingecko.com'}
                 ];
             }
         }
@@ -187,6 +207,7 @@
                 if (docSnap.exists()) siteSettings = { ...siteSettings, ...docSnap.data() };
                 else setDoc(settingsRef, siteSettings).catch(console.error);
                 parseCarouselImages();
+                parseLinksCarousel();
                 applyTheme(siteSettings);
                 renderCurrentView();
             });
@@ -207,19 +228,20 @@
         }
 
         let currentPage = 'home';
-        let carouselInterval = null;
-        let currentSlideIndex = 0;
+        let mainCarouselInterval = null;
+        let linksCarouselInterval = null;
+        let currentMainSlide = 0;
+        let currentLinksSlide = 0;
 
         function setPage(page) { currentPage = page; window.location.hash = page; renderCurrentView(); }
         function getPageFromHash() { let hash = window.location.hash.substring(1); if (['home','education','mentor','community','pricing','contact'].includes(hash)) return hash; return 'home'; }
         window.addEventListener('hashchange', () => { if (currentMode === 'user') { currentPage = getPageFromHash(); renderCurrentView(); } });
 
-        function initCarousel() {
-            if (carouselInterval) clearInterval(carouselInterval);
-            const slidesContainer = document.getElementById('carouselSlides');
-            const dotsContainer = document.getElementById('carouselDots');
+        function initMainCarousel() {
+            if (mainCarouselInterval) clearInterval(mainCarouselInterval);
+            const slidesContainer = document.getElementById('mainCarouselSlides');
+            const dotsContainer = document.getElementById('mainCarouselDots');
             if (!slidesContainer || !dotsContainer || carouselImagesList.length === 0) return;
-            
             slidesContainer.innerHTML = '';
             carouselImagesList.forEach((imgUrl, idx) => {
                 const slideDiv = document.createElement('div');
@@ -231,27 +253,62 @@
             carouselImagesList.forEach((_, idx) => {
                 const dot = document.createElement('div');
                 dot.className = `carousel-dot ${idx === 0 ? 'active' : ''}`;
-                dot.addEventListener('click', () => goToSlide(idx));
+                dot.addEventListener('click', () => goToMainSlide(idx));
                 dotsContainer.appendChild(dot);
             });
-            
-            function goToSlide(index) {
-                currentSlideIndex = index;
-                slidesContainer.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-                document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
-                    if (i === currentSlideIndex) dot.classList.add('active');
+            function goToMainSlide(index) {
+                currentMainSlide = index;
+                slidesContainer.style.transform = `translateX(-${currentMainSlide * 100}%)`;
+                document.querySelectorAll('#mainCarouselDots .carousel-dot').forEach((dot, i) => {
+                    if (i === currentMainSlide) dot.classList.add('active');
                     else dot.classList.remove('active');
                 });
             }
-            window.goToSlide = goToSlide;
-            
-            carouselInterval = setInterval(() => {
+            window.goToMainSlide = goToMainSlide;
+            mainCarouselInterval = setInterval(() => {
                 if (carouselImagesList.length > 0) {
-                    currentSlideIndex = (currentSlideIndex + 1) % carouselImagesList.length;
-                    goToSlide(currentSlideIndex);
+                    currentMainSlide = (currentMainSlide + 1) % carouselImagesList.length;
+                    goToMainSlide(currentMainSlide);
                 }
             }, 5000);
-            goToSlide(0);
+            goToMainSlide(0);
+        }
+
+        function initLinksCarousel() {
+            if (linksCarouselInterval) clearInterval(linksCarouselInterval);
+            const slidesContainer = document.getElementById('linksCarouselSlides');
+            const dotsContainer = document.getElementById('linksCarouselDots');
+            if (!slidesContainer || !dotsContainer || linksCarouselList.length === 0) return;
+            slidesContainer.innerHTML = '';
+            linksCarouselList.forEach((item, idx) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'small-carousel-slide';
+                slideDiv.innerHTML = `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(item.image)}" alt="Link ${idx+1}" onerror="this.src='https://via.placeholder.com/600x180?text=Link+${idx+1}'"></a>`;
+                slidesContainer.appendChild(slideDiv);
+            });
+            dotsContainer.innerHTML = '';
+            linksCarouselList.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `small-carousel-dot ${idx === 0 ? 'active' : ''}`;
+                dot.addEventListener('click', () => goToLinksSlide(idx));
+                dotsContainer.appendChild(dot);
+            });
+            function goToLinksSlide(index) {
+                currentLinksSlide = index;
+                slidesContainer.style.transform = `translateX(-${currentLinksSlide * 100}%)`;
+                document.querySelectorAll('#linksCarouselDots .small-carousel-dot').forEach((dot, i) => {
+                    if (i === currentLinksSlide) dot.classList.add('active');
+                    else dot.classList.remove('active');
+                });
+            }
+            window.goToLinksSlide = goToLinksSlide;
+            linksCarouselInterval = setInterval(() => {
+                if (linksCarouselList.length > 0) {
+                    currentLinksSlide = (currentLinksSlide + 1) % linksCarouselList.length;
+                    goToLinksSlide(currentLinksSlide);
+                }
+            }, 5000);
+            goToLinksSlide(0);
         }
 
         function renderHomePage(primary) {
@@ -277,8 +334,8 @@
                             </div>
                             <div class="flex-1">
                                 <div class="carousel-container">
-                                    <div id="carouselSlides" class="carousel-slides"></div>
-                                    <div id="carouselDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div>
+                                    <div id="mainCarouselSlides" class="carousel-slides"></div>
+                                    <div id="mainCarouselDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div>
                                 </div>
                             </div>
                         </div>
@@ -289,7 +346,19 @@
                         <p class="text-lg leading-relaxed">${getLocalizedText('homeContent')}</p>
                     </div>
                 </div>
-                <!-- DISCLAIMER CARD - small separate panel -->
+                <!-- LINKS CAROUSEL SECTION (small panel with 4 rotating images) -->
+                <div class="container mx-auto px-6 py-8">
+                    <div class="links-header">
+                        <i class="fas fa-link text-2xl" style="color:${primary}"></i>
+                        <h2 class="text-2xl font-bold">${t('partnersLinks')}</h2>
+                    </div>
+                    <div class="small-carousel-container max-w-3xl mx-auto">
+                        <div id="linksCarouselSlides" class="small-carousel-slides"></div>
+                        <div id="linksCarouselDots" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1 z-10"></div>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-3">${currentLanguage === 'en' ? 'Click on any image to visit partner website' : 'Κάντε κλικ σε οποιαδήποτε εικόνα για να επισκεφτείτε τον ιστότοπο του συνεργάτη'}</p>
+                </div>
+                <!-- DISCLAIMER CARD -->
                 <div class="container mx-auto px-6 pb-8">
                     <div class="disclaimer-card glass-card p-4 rounded-xl max-w-3xl mx-auto flex items-start gap-3" style="background: rgba(0,0,0,0.5); border-left-color: ${primary};">
                         <i class="fas fa-exclamation-triangle text-xl mt-0.5" style="color: ${primary}"></i>
@@ -384,34 +453,32 @@
             };
         };
 
-        // ADMIN VIEW with disclaimer editor
+        // ADMIN VIEW (simplified but includes both carousels editor)
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
-            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-6xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">Settings & Carousel</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
+            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-6xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">Settings & Carousels</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
         }
         function renderAdminLogin() { return `<div class="min-h-screen flex items-center justify-center p-5" style="background:#0a0a14;"><div class="glass-card max-w-md w-full p-8 rounded-2xl"><div class="text-center mb-6"><i class="fas fa-shield-alt text-5xl" style="color:#f7931a"></i><h2 class="text-2xl font-bold mt-2">Admin Auth</h2></div><div id="adminAuthForm"><input type="email" id="adminEmail" placeholder="Email" class="w-full mb-3 p-3 rounded-lg bg-gray-800"><input type="password" id="adminPassword" placeholder="Password" class="w-full mb-4 p-3 rounded-lg bg-gray-800"><button id="adminLoginBtn" class="w-full py-2 rounded-full font-bold mb-2" style="background:#f7931a; color:#000">Login</button><button id="adminRegisterBtn" class="w-full py-2 rounded-full border border-gray-500">Register (Admin)</button></div><div id="adminAuthMsg" class="text-red-400 text-sm mt-3 text-center"></div></div></div>`; }
         async function checkAdminAuthorization(user) { if (!user) return false; const adminDocRef = doc(db, "admin", "adminData"); const adminSnap = await getDoc(adminDocRef); if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true; if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid }); return true; } return false; }
         function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10')); btn.classList.add('active-tab','bg-white/10'); if(btn.dataset.tab === 'settings') renderSettingsTab(); if(btn.dataset.tab === 'packages') renderPackagesTab(); if(btn.dataset.tab === 'leads') renderLeadsTab(); if(btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if(btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderSettingsTab(); }
         async function renderSettingsTab() {
             const container = document.getElementById('adminTabContent');
-            const currentImagesJson = JSON.stringify(carouselImagesList);
-            container.innerHTML = `<h3 class="text-2xl font-bold mb-5">Settings, Carousel & Disclaimer</h3><div class="grid grid-cols-1 gap-4"><div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div><div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 h-10 rounded"></div><div><label>Logo URL</label><input type="text" id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Email</label><input type="email" id="contactEmail" value="${escapeHtml(siteSettings.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Phone</label><input type="text" id="contactPhone" value="${escapeHtml(siteSettings.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Address</label><input type="text" id="contactAddress" value="${escapeHtml(siteSettings.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Carousel Images (JSON array)</label><textarea id="carouselImages" rows="4" class="w-full p-2 rounded bg-gray-800 font-mono text-sm">${currentImagesJson}</textarea></div><div class="border-t border-gray-600 pt-4 mt-2"><h4 class="font-bold mb-2">⚠️ Disclaimer Text</h4><div><label>Greek (el)</label><textarea id="disclaimerText" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div><div class="mt-2"><label>English (en)</label><textarea id="disclaimerText_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div></div><div class="border-t border-gray-600 pt-4 mt-2"><h4 class="font-bold mb-2">Page Content (Greek/English)</h4><div class="grid grid-cols-2 gap-3"><div><label>Hero Title (el)</label><input type="text" id="heroTitle" value="${escapeHtml(siteSettings.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Title (en)</label><input type="text" id="heroTitle_en" value="${escapeHtml(siteSettings.heroTitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Subtitle (el)</label><input type="text" id="heroSubtitle" value="${escapeHtml(siteSettings.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Subtitle (en)</label><input type="text" id="heroSubtitle_en" value="${escapeHtml(siteSettings.heroSubtitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div></div><div><label>Home Content (el)</label><textarea id="homeContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent)}</textarea></div><div><label>Home Content (en)</label><textarea id="homeContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent_en||'')}</textarea></div></div></div><button id="saveSettingsBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save All</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
+            const currentMainJson = JSON.stringify(carouselImagesList);
+            const currentLinksJson = JSON.stringify(linksCarouselList);
+            container.innerHTML = `<h3 class="text-2xl font-bold mb-5">Settings & Carousels</h3><div class="grid grid-cols-1 gap-4"><div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div><div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 h-10 rounded"></div><div><label>Logo URL</label><input type="text" id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Email</label><input type="email" id="contactEmail" value="${escapeHtml(siteSettings.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Phone</label><input type="text" id="contactPhone" value="${escapeHtml(siteSettings.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Address</label><input type="text" id="contactAddress" value="${escapeHtml(siteSettings.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Main Carousel Images (JSON array of URLs)</label><textarea id="carouselImages" rows="3" class="w-full p-2 rounded bg-gray-800 font-mono text-sm">${currentMainJson}</textarea></div><div><label>Links Carousel (JSON array of {image, url}) - 4 items recommended</label><textarea id="linksCarousel" rows="6" class="w-full p-2 rounded bg-gray-800 font-mono text-sm">${currentLinksJson}</textarea><p class="text-xs text-gray-400 mt-1">Format: [{"image":"https://...","url":"https://..."}, ...]</p></div><div class="border-t border-gray-600 pt-4"><h4 class="font-bold">Disclaimer Text</h4><div><label>Greek</label><textarea id="disclaimerText" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div><div class="mt-2"><label>English</label><textarea id="disclaimerText_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div></div></div><button id="saveSettingsBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save All</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
             document.getElementById('saveSettingsBtn').onclick = async () => {
-                let carouselArray;
-                try { carouselArray = JSON.parse(document.getElementById('carouselImages').value); } catch(e) { carouselArray = carouselImagesList; }
+                let mainArray, linksArray;
+                try { mainArray = JSON.parse(document.getElementById('carouselImages').value); } catch(e) { mainArray = carouselImagesList; }
+                try { linksArray = JSON.parse(document.getElementById('linksCarousel').value); } catch(e) { linksArray = linksCarouselList; }
                 const updated = {
                     primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value,
                     logoUrl: document.getElementById('logoUrl').value, footerText: document.getElementById('footerText').value,
                     contactEmail: document.getElementById('contactEmail').value, contactPhone: document.getElementById('contactPhone').value, contactAddress: document.getElementById('contactAddress').value,
-                    heroTitle: document.getElementById('heroTitle').value, heroSubtitle: document.getElementById('heroSubtitle').value,
-                    heroTitle_en: document.getElementById('heroTitle_en').value, heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
-                    homeContent: document.getElementById('homeContent').value, homeContent_en: document.getElementById('homeContent_en').value,
-                    carouselImages: JSON.stringify(carouselArray),
-                    disclaimerText: document.getElementById('disclaimerText').value,
-                    disclaimerText_en: document.getElementById('disclaimerText_en').value
+                    carouselImages: JSON.stringify(mainArray), linksCarousel: JSON.stringify(linksArray),
+                    disclaimerText: document.getElementById('disclaimerText').value, disclaimerText_en: document.getElementById('disclaimerText_en').value
                 };
                 await updateDoc(doc(db, "settings", "siteConfig"), updated);
-                document.getElementById('settingsMsg').innerText = "✅ All saved!";
+                document.getElementById('settingsMsg').innerText = "✅ All saved! Carousels will update.";
                 setTimeout(()=>document.getElementById('settingsMsg').innerText="",2000);
             };
         }
@@ -432,9 +499,10 @@
                 document.getElementById('langEn')?.addEventListener('click', () => { currentLanguage = 'en'; renderCurrentView(); });
                 const contactForm = document.getElementById('contactForm');
                 if(contactForm) contactForm.onsubmit = async (e) => { e.preventDefault(); const name = document.getElementById('contactName').value.trim(), email = document.getElementById('contactEmailInput').value.trim(), message = document.getElementById('contactMessage').value.trim(); if(!name||!email||!message) return alert("Fill all fields"); try { await addDoc(collection(db,"contactMessages"),{name,email,message,timestamp:new Date().toISOString()}); document.getElementById('contactFormMsg').innerText = "✅ Sent!"; contactForm.reset(); setTimeout(()=>document.getElementById('contactFormMsg').innerText="",3000); } catch(e){ alert("Error"); } };
-                if (currentPage === 'home') setTimeout(() => initCarousel(), 100);
+                if (currentPage === 'home') { setTimeout(() => { initMainCarousel(); initLinksCarousel(); }, 100); }
             } else {
-                if (carouselInterval) clearInterval(carouselInterval);
+                if (mainCarouselInterval) clearInterval(mainCarouselInterval);
+                if (linksCarouselInterval) clearInterval(linksCarouselInterval);
                 root.innerHTML = renderAdminView();
                 if (adminAuthorized) { setTimeout(()=>loadAdminDashboardLogic(),50); document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => { await signOut(auth); window.location.reload(); }); document.getElementById('viewMainSiteBtn')?.addEventListener('click', () => { const mainUrl = new URL(window.location.href); mainUrl.searchParams.delete('admin'); window.open(mainUrl.toString(), '_blank'); }); }
                 else { attachAdminAuthEvents(); }
