@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- HTML5 Sortable library for drag & drop -->
+    <script src="https://cdn.jsdelivr.net/npm/html5-sortable@0.11.0/dist/html5-sortable.min.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
         body { transition: background-color 0.3s ease, color 0.2s ease; margin: 0; overflow-x: hidden; }
@@ -72,6 +74,16 @@
         @media (max-width: 768px) { .carousel-slide img { height: 250px; } .small-carousel-slide img { height: 120px; } }
         .disclaimer-card { background: rgba(0,0,0,0.6); border-left: 4px solid #f7931a; font-size: 0.8rem; }
         .links-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1.5rem; }
+        /* Admin image editor styles */
+        .image-editor-item { transition: all 0.2s; cursor: grab; }
+        .image-editor-item:active { cursor: grabbing; }
+        .image-preview-container { position: relative; display: inline-block; }
+        .zoom-controls { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 4px 8px; display: flex; gap: 8px; z-index: 10; }
+        .zoom-controls button { background: none; border: none; color: white; cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 50%; transition: all 0.2s; }
+        .zoom-controls button:hover { background: rgba(255,255,255,0.2); }
+        .preview-img { transition: transform 0.2s ease; transform-origin: center center; }
+        .sortable-handle { cursor: grab; padding: 4px; }
+        .sortable-handle:active { cursor: grabbing; }
     </style>
 </head>
 <body class="text-gray-200">
@@ -116,7 +128,6 @@
         };
         function t(key) { return translations[currentLanguage][key] || key; }
 
-        // Extended site settings with main carousel and links carousel
         let siteSettings = {
             primaryColor: '#f7931a',
             backgroundColor: '#0a0a1f',
@@ -141,9 +152,7 @@
             mentorContent_en: 'Our team consists of professional traders with years of experience.',
             communityContent_en: 'Join an exclusive community of ambitious investors.',
             pricingContent_en: 'Choose the program that fits your goals.',
-            // Main carousel images (hero area)
             carouselImages: '["https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200","https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200","https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200","https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200"]',
-            // Links carousel (4 images with clickable URLs)
             linksCarousel: '[{"image":"https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600","url":"https://www.binance.com"},{"image":"https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=600","url":"https://www.coinbase.com"},{"image":"https://images.unsplash.com/photo-1605792657660-596af9009e82?w=600","url":"https://www.tradingview.com"},{"image":"https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600","url":"https://www.coingecko.com"}]',
             disclaimerText: '⚠️ ΠΡΟΣΟΧΗ: Οι επενδύσεις σε κρύπτο και χρηματοοικονομικά προϊόντα ενέχουν υψηλό κίνδυνο. Οι προηγούμενες αποδόσεις δεν εγγυώνται μελλοντικά αποτελέσματα. Το TradeLegends παρέχει αποκλειστικά εκπαιδευτικό περιεχόμενο και όχι επενδυτικές συμβουλές. Συμβουλευτείτε πάντα έναν εξειδικευμένο σύμβουλο πριν προβείτε σε επένδυση.',
             disclaimerText_en: '⚠️ WARNING: Crypto and financial investments involve high risk. Past performance does not guarantee future results. TradeLegends provides educational content only, not investment advice. Always consult a qualified advisor before investing.'
@@ -151,7 +160,7 @@
         let packagesList = [];
         let announcementsList = [];
         let carouselImagesList = [];
-        let linksCarouselList = []; // array of {image, url}
+        let linksCarouselList = [];
 
         function parseCarouselImages() {
             try {
@@ -311,6 +320,7 @@
             goToLinksSlide(0);
         }
 
+        // ---------- USER PAGE RENDERING (unchanged but references carousels) ----------
         function renderHomePage(primary) {
             const announcementsHtml = (() => {
                 const active = announcementsList.filter(a => a.active !== false);
@@ -321,7 +331,6 @@
                     if (currentLanguage === 'en' && ann.content_en) content = ann.content_en;
                     return `<div class="announcement-card glass-card p-5 rounded-xl" style="background: rgba(0,0,0,0.35); border-left: 3px solid ${primary};"><div class="flex items-start justify-between"><h3 class="text-xl font-bold mb-2" style="color:${primary}">${escapeHtml(title)}</h3><span class="text-xs text-gray-400">${ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : ''}</span></div><p class="text-gray-200 text-sm leading-relaxed">${escapeHtml(content)}</p>${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" class="inline-block mt-3 text-xs font-semibold" style="color:${primary}"><i class="fas fa-external-link-alt"></i> ${currentLanguage === 'en' ? 'Learn more' : 'Μάθετε περισσότερα'}</a>` : ''}</div>` }).join('')}</div>`;
             })();
-            
             return `
                 <div class="relative overflow-hidden pt-8 pb-8">
                     <div class="absolute inset-0 hero-gradient opacity-40"></div>
@@ -346,26 +355,18 @@
                         <p class="text-lg leading-relaxed">${getLocalizedText('homeContent')}</p>
                     </div>
                 </div>
-                <!-- LINKS CAROUSEL SECTION (small panel with 4 rotating images) -->
                 <div class="container mx-auto px-6 py-8">
-                    <div class="links-header">
-                        <i class="fas fa-link text-2xl" style="color:${primary}"></i>
-                        <h2 class="text-2xl font-bold">${t('partnersLinks')}</h2>
-                    </div>
+                    <div class="links-header"><i class="fas fa-link text-2xl" style="color:${primary}"></i><h2 class="text-2xl font-bold">${t('partnersLinks')}</h2></div>
                     <div class="small-carousel-container max-w-3xl mx-auto">
                         <div id="linksCarouselSlides" class="small-carousel-slides"></div>
                         <div id="linksCarouselDots" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1 z-10"></div>
                     </div>
                     <p class="text-center text-xs text-gray-400 mt-3">${currentLanguage === 'en' ? 'Click on any image to visit partner website' : 'Κάντε κλικ σε οποιαδήποτε εικόνα για να επισκεφτείτε τον ιστότοπο του συνεργάτη'}</p>
                 </div>
-                <!-- DISCLAIMER CARD -->
                 <div class="container mx-auto px-6 pb-8">
                     <div class="disclaimer-card glass-card p-4 rounded-xl max-w-3xl mx-auto flex items-start gap-3" style="background: rgba(0,0,0,0.5); border-left-color: ${primary};">
                         <i class="fas fa-exclamation-triangle text-xl mt-0.5" style="color: ${primary}"></i>
-                        <div>
-                            <h4 class="font-bold text-sm mb-1" style="color: ${primary}">${t('disclaimer')}</h4>
-                            <p class="text-xs text-gray-300 leading-relaxed">${getDisclaimerText()}</p>
-                        </div>
+                        <div><h4 class="font-bold text-sm mb-1" style="color: ${primary}">${t('disclaimer')}</h4><p class="text-xs text-gray-300 leading-relaxed">${getDisclaimerText()}</p></div>
                     </div>
                 </div>
                 <div class="container mx-auto px-6 py-12 border-t border-white/10">
@@ -374,7 +375,6 @@
                 </div>
             `;
         }
-        
         function renderEducationPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-graduation-cap text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('education')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('educationContent')}</p></div></div>`; }
         function renderMentorPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-chalkboard-user text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('mentor')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('mentorContent')}</p></div></div>`; }
         function renderCommunityPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-users text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('community')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('communityContent')}</p></div></div>`; }
@@ -413,7 +413,6 @@
             else if (currentPage === 'pricing') mainContent = renderPricingPage(primary);
             else if (currentPage === 'contact') mainContent = renderContactPage(primary);
             else mainContent = renderHomePage(primary);
-
             return `
                 <div class="min-h-screen" style="background: ${bgColor}">
                     <nav class="py-4 px-6 md:px-12 border-b border-white/10 backdrop-blur-md sticky top-0 z-50" style="background: ${bgColor}cc">
@@ -453,38 +452,240 @@
             };
         };
 
-        // ADMIN VIEW (simplified but includes both carousels editor)
+        // ---------- ADMIN VIEW WITH IMAGE EDITOR (reorder + zoom) ----------
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
-            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-6xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">Settings & Carousels</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
+            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-7xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">Settings & Image Editor</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
         }
         function renderAdminLogin() { return `<div class="min-h-screen flex items-center justify-center p-5" style="background:#0a0a14;"><div class="glass-card max-w-md w-full p-8 rounded-2xl"><div class="text-center mb-6"><i class="fas fa-shield-alt text-5xl" style="color:#f7931a"></i><h2 class="text-2xl font-bold mt-2">Admin Auth</h2></div><div id="adminAuthForm"><input type="email" id="adminEmail" placeholder="Email" class="w-full mb-3 p-3 rounded-lg bg-gray-800"><input type="password" id="adminPassword" placeholder="Password" class="w-full mb-4 p-3 rounded-lg bg-gray-800"><button id="adminLoginBtn" class="w-full py-2 rounded-full font-bold mb-2" style="background:#f7931a; color:#000">Login</button><button id="adminRegisterBtn" class="w-full py-2 rounded-full border border-gray-500">Register (Admin)</button></div><div id="adminAuthMsg" class="text-red-400 text-sm mt-3 text-center"></div></div></div>`; }
         async function checkAdminAuthorization(user) { if (!user) return false; const adminDocRef = doc(db, "admin", "adminData"); const adminSnap = await getDoc(adminDocRef); if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true; if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid }); return true; } return false; }
         function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10')); btn.classList.add('active-tab','bg-white/10'); if(btn.dataset.tab === 'settings') renderSettingsTab(); if(btn.dataset.tab === 'packages') renderPackagesTab(); if(btn.dataset.tab === 'leads') renderLeadsTab(); if(btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if(btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderSettingsTab(); }
+        
+        // Image editor helper: create zoomable preview with drag handle
+        function renderImageEditor(items, type, onReorder, onUpdateItem) {
+            const container = document.createElement('div');
+            container.className = 'space-y-3';
+            items.forEach((item, idx) => {
+                const imgUrl = type === 'main' ? item : item.image;
+                const urlValue = type === 'main' ? item : item.url;
+                const div = document.createElement('div');
+                div.className = 'image-editor-item bg-gray-800 rounded-xl p-3 flex flex-col md:flex-row items-center gap-4';
+                div.setAttribute('data-idx', idx);
+                div.innerHTML = `
+                    <div class="sortable-handle cursor-grab"><i class="fas fa-grip-vertical text-gray-400"></i></div>
+                    <div class="image-preview-container relative">
+                        <img src="${escapeHtml(imgUrl)}" class="preview-img w-32 h-24 object-cover rounded-lg" style="transform: scale(1);" onerror="this.src='https://via.placeholder.com/128x96?text=Error'">
+                        <div class="zoom-controls">
+                            <button class="zoom-in" data-idx="${idx}" data-type="${type}"><i class="fas fa-search-plus"></i></button>
+                            <button class="zoom-out" data-idx="${idx}" data-type="${type}"><i class="fas fa-search-minus"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <input type="text" class="image-url w-full p-2 rounded bg-gray-700 text-sm" value="${escapeHtml(imgUrl)}" placeholder="Image URL">
+                        ${type === 'links' ? `<input type="text" class="link-url w-full p-2 mt-2 rounded bg-gray-700 text-sm" value="${escapeHtml(urlValue)}" placeholder="Link URL (https://...)">` : ''}
+                        <button class="delete-item mt-2 bg-red-600 text-xs px-3 py-1 rounded"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            // Add new item button
+            const addBtn = document.createElement('button');
+            addBtn.className = 'mt-3 bg-emerald-600 text-sm px-4 py-2 rounded-lg w-full md:w-auto';
+            addBtn.innerHTML = `<i class="fas fa-plus"></i> Add New ${type === 'main' ? 'Image' : 'Link'}`;
+            addBtn.onclick = () => {
+                const newItem = type === 'main' ? 'https://via.placeholder.com/1200x400?text=New+Image' : { image: 'https://via.placeholder.com/600x180?text=New+Link', url: 'https://' };
+                const newList = [...items, newItem];
+                onReorder(newList);
+            };
+            container.appendChild(addBtn);
+            
+            // Attach event listeners
+            container.querySelectorAll('.zoom-in').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(btn.dataset.idx);
+                    const img = btn.closest('.image-preview-container').querySelector('.preview-img');
+                    let currentScale = parseFloat(img.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                    currentScale = Math.min(currentScale + 0.2, 3);
+                    img.style.transform = `scale(${currentScale})`;
+                });
+            });
+            container.querySelectorAll('.zoom-out').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(btn.dataset.idx);
+                    const img = btn.closest('.image-preview-container').querySelector('.preview-img');
+                    let currentScale = parseFloat(img.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                    currentScale = Math.max(currentScale - 0.2, 0.5);
+                    img.style.transform = `scale(${currentScale})`;
+                });
+            });
+            container.querySelectorAll('.image-url').forEach((input, i) => {
+                input.addEventListener('change', () => {
+                    const newList = [...items];
+                    if (type === 'main') newList[i] = input.value;
+                    else newList[i] = { ...newList[i], image: input.value };
+                    onUpdateItem(newList);
+                });
+            });
+            if (type === 'links') {
+                container.querySelectorAll('.link-url').forEach((input, i) => {
+                    input.addEventListener('change', () => {
+                        const newList = [...items];
+                        newList[i] = { ...newList[i], url: input.value };
+                        onUpdateItem(newList);
+                    });
+                });
+            }
+            container.querySelectorAll('.delete-item').forEach((btn, i) => {
+                btn.addEventListener('click', () => {
+                    const newList = items.filter((_, idx) => idx !== i);
+                    onReorder(newList);
+                });
+            });
+            return container;
+        }
+
         async function renderSettingsTab() {
             const container = document.getElementById('adminTabContent');
-            const currentMainJson = JSON.stringify(carouselImagesList);
-            const currentLinksJson = JSON.stringify(linksCarouselList);
-            container.innerHTML = `<h3 class="text-2xl font-bold mb-5">Settings & Carousels</h3><div class="grid grid-cols-1 gap-4"><div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div><div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 h-10 rounded"></div><div><label>Logo URL</label><input type="text" id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Email</label><input type="email" id="contactEmail" value="${escapeHtml(siteSettings.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Phone</label><input type="text" id="contactPhone" value="${escapeHtml(siteSettings.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Contact Address</label><input type="text" id="contactAddress" value="${escapeHtml(siteSettings.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Main Carousel Images (JSON array of URLs)</label><textarea id="carouselImages" rows="3" class="w-full p-2 rounded bg-gray-800 font-mono text-sm">${currentMainJson}</textarea></div><div><label>Links Carousel (JSON array of {image, url}) - 4 items recommended</label><textarea id="linksCarousel" rows="6" class="w-full p-2 rounded bg-gray-800 font-mono text-sm">${currentLinksJson}</textarea><p class="text-xs text-gray-400 mt-1">Format: [{"image":"https://...","url":"https://..."}, ...]</p></div><div class="border-t border-gray-600 pt-4"><h4 class="font-bold">Disclaimer Text</h4><div><label>Greek</label><textarea id="disclaimerText" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div><div class="mt-2"><label>English</label><textarea id="disclaimerText_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div></div></div><button id="saveSettingsBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save All</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
-            document.getElementById('saveSettingsBtn').onclick = async () => {
-                let mainArray, linksArray;
-                try { mainArray = JSON.parse(document.getElementById('carouselImages').value); } catch(e) { mainArray = carouselImagesList; }
-                try { linksArray = JSON.parse(document.getElementById('linksCarousel').value); } catch(e) { linksArray = linksCarouselList; }
+            // Create main carousel editor
+            const mainEditorDiv = document.createElement('div');
+            mainEditorDiv.innerHTML = '<h4 class="font-bold text-lg mb-2 mt-4">🎠 Main Carousel Images (drag to reorder)</h4><div id="mainCarouselEditor"></div>';
+            const linksEditorDiv = document.createElement('div');
+            linksEditorDiv.innerHTML = '<h4 class="font-bold text-lg mb-2 mt-6">🔗 Links Carousel (drag to reorder, click images to zoom)</h4><div id="linksCarouselEditor"></div>';
+            
+            container.innerHTML = `<div class="grid grid-cols-1 gap-4"><div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div>
+                <div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 h-10 rounded"></div>
+                <div><label>Logo URL</label><input type="text" id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Contact Email</label><input type="email" id="contactEmail" value="${escapeHtml(siteSettings.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Contact Phone</label><input type="text" id="contactPhone" value="${escapeHtml(siteSettings.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Contact Address</label><input type="text" id="contactAddress" value="${escapeHtml(siteSettings.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Title (el)</label><input type="text" id="heroTitle" value="${escapeHtml(siteSettings.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Title (en)</label><input type="text" id="heroTitle_en" value="${escapeHtml(siteSettings.heroTitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Subtitle (el)</label><input type="text" id="heroSubtitle" value="${escapeHtml(siteSettings.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Subtitle (en)</label><input type="text" id="heroSubtitle_en" value="${escapeHtml(siteSettings.heroSubtitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Home Content (el)</label><textarea id="homeContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent)}</textarea></div>
+                <div><label>Home Content (en)</label><textarea id="homeContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent_en||'')}</textarea></div>
+                <div><label>Disclaimer (el)</label><textarea id="disclaimerText" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div>
+                <div><label>Disclaimer (en)</label><textarea id="disclaimerText_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div></div>`;
+            container.appendChild(mainEditorDiv);
+            container.appendChild(linksEditorDiv);
+            
+            // Initialize sortable for main carousel
+            const mainEditorContainer = document.getElementById('mainCarouselEditor');
+            const linksEditorContainer = document.getElementById('linksCarouselEditor');
+            
+            function refreshMainEditor() {
+                const editor = renderImageEditor(carouselImagesList, 'main', 
+                    (newList) => { carouselImagesList = newList; refreshMainEditor(); updateCarousels(); },
+                    (newList) => { carouselImagesList = newList; refreshMainEditor(); updateCarousels(); }
+                );
+                mainEditorContainer.innerHTML = '';
+                mainEditorContainer.appendChild(editor);
+                // Make sortable
+                if (window.sortable) window.sortable(mainEditorContainer, { items: '.image-editor-item', handle: '.sortable-handle', onDrop: () => {
+                    const newItems = [];
+                    mainEditorContainer.querySelectorAll('.image-editor-item').forEach(el => {
+                        const imgUrl = el.querySelector('.image-url').value;
+                        newItems.push(imgUrl);
+                    });
+                    carouselImagesList = newItems;
+                    updateCarousels();
+                }});
+            }
+            
+            function refreshLinksEditor() {
+                const editor = renderImageEditor(linksCarouselList, 'links',
+                    (newList) => { linksCarouselList = newList; refreshLinksEditor(); updateCarousels(); },
+                    (newList) => { linksCarouselList = newList; refreshLinksEditor(); updateCarousels(); }
+                );
+                linksEditorContainer.innerHTML = '';
+                linksEditorContainer.appendChild(editor);
+                if (window.sortable) window.sortable(linksEditorContainer, { items: '.image-editor-item', handle: '.sortable-handle', onDrop: () => {
+                    const newItems = [];
+                    linksEditorContainer.querySelectorAll('.image-editor-item').forEach(el => {
+                        const imgUrl = el.querySelector('.image-url').value;
+                        const linkUrl = el.querySelector('.link-url')?.value || '';
+                        newItems.push({ image: imgUrl, url: linkUrl });
+                    });
+                    linksCarouselList = newItems;
+                    updateCarousels();
+                }});
+            }
+            
+            function updateCarousels() {
+                // Update global arrays and save to Firebase
                 const updated = {
-                    primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value,
-                    logoUrl: document.getElementById('logoUrl').value, footerText: document.getElementById('footerText').value,
-                    contactEmail: document.getElementById('contactEmail').value, contactPhone: document.getElementById('contactPhone').value, contactAddress: document.getElementById('contactAddress').value,
-                    carouselImages: JSON.stringify(mainArray), linksCarousel: JSON.stringify(linksArray),
-                    disclaimerText: document.getElementById('disclaimerText').value, disclaimerText_en: document.getElementById('disclaimerText_en').value
+                    carouselImages: JSON.stringify(carouselImagesList),
+                    linksCarousel: JSON.stringify(linksCarouselList)
                 };
-                await updateDoc(doc(db, "settings", "siteConfig"), updated);
-                document.getElementById('settingsMsg').innerText = "✅ All saved! Carousels will update.";
-                setTimeout(()=>document.getElementById('settingsMsg').innerText="",2000);
+                updateDoc(doc(db, "settings", "siteConfig"), updated).catch(console.error);
+                // Also update other settings
+                const otherSettings = {
+                    primaryColor: document.getElementById('primaryColor').value,
+                    backgroundColor: document.getElementById('backgroundColor').value,
+                    logoUrl: document.getElementById('logoUrl').value,
+                    footerText: document.getElementById('footerText').value,
+                    contactEmail: document.getElementById('contactEmail').value,
+                    contactPhone: document.getElementById('contactPhone').value,
+                    contactAddress: document.getElementById('contactAddress').value,
+                    heroTitle: document.getElementById('heroTitle').value,
+                    heroTitle_en: document.getElementById('heroTitle_en').value,
+                    heroSubtitle: document.getElementById('heroSubtitle').value,
+                    heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
+                    homeContent: document.getElementById('homeContent').value,
+                    homeContent_en: document.getElementById('homeContent_en').value,
+                    disclaimerText: document.getElementById('disclaimerText').value,
+                    disclaimerText_en: document.getElementById('disclaimerText_en').value
+                };
+                updateDoc(doc(db, "settings", "siteConfig"), otherSettings).catch(console.error);
+                const msgDiv = document.getElementById('settingsMsg') || (()=>{const d=document.createElement('div'); d.id='settingsMsg'; d.className='mt-3 text-green-400'; container.appendChild(d); return d;})();
+                if(msgDiv) { msgDiv.innerText = "✅ Settings and images saved!"; setTimeout(()=>msgDiv.innerText="",2000); }
+            }
+            
+            refreshMainEditor();
+            refreshLinksEditor();
+            
+            // Add save button for other settings
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'mt-6 px-6 py-2 rounded-full font-bold';
+            saveBtn.style.background = '#f7931a';
+            saveBtn.style.color = '#000';
+            saveBtn.innerText = 'Save All Settings (excluding images - auto-saved)';
+            saveBtn.onclick = async () => {
+                const otherSettings = {
+                    primaryColor: document.getElementById('primaryColor').value,
+                    backgroundColor: document.getElementById('backgroundColor').value,
+                    logoUrl: document.getElementById('logoUrl').value,
+                    footerText: document.getElementById('footerText').value,
+                    contactEmail: document.getElementById('contactEmail').value,
+                    contactPhone: document.getElementById('contactPhone').value,
+                    contactAddress: document.getElementById('contactAddress').value,
+                    heroTitle: document.getElementById('heroTitle').value,
+                    heroTitle_en: document.getElementById('heroTitle_en').value,
+                    heroSubtitle: document.getElementById('heroSubtitle').value,
+                    heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
+                    homeContent: document.getElementById('homeContent').value,
+                    homeContent_en: document.getElementById('homeContent_en').value,
+                    disclaimerText: document.getElementById('disclaimerText').value,
+                    disclaimerText_en: document.getElementById('disclaimerText_en').value,
+                    carouselImages: JSON.stringify(carouselImagesList),
+                    linksCarousel: JSON.stringify(linksCarouselList)
+                };
+                await updateDoc(doc(db, "settings", "siteConfig"), otherSettings);
+                const msgDiv = document.getElementById('settingsMsg') || (()=>{const d=document.createElement('div'); d.id='settingsMsg'; d.className='mt-3 text-green-400'; container.appendChild(d); return d;})();
+                msgDiv.innerText = "✅ All settings saved!";
+                setTimeout(()=>msgDiv.innerText="",2000);
             };
+            container.appendChild(saveBtn);
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'settingsMsg';
+            msgDiv.className = 'mt-3 text-green-400';
+            container.appendChild(msgDiv);
         }
+        
         async function renderPackagesTab() { const container = document.getElementById('adminTabContent'); const pkgHtml = packagesList.map(p => `<div class="flex justify-between items-center border-b py-2"><div><strong>${escapeHtml(p.name)}</strong> / ${escapeHtml(p.name_en||'')}<br><span class="text-xs">${escapeHtml(p.price)}</span></div><div><button onclick="window.editPackage('${p.id}')" class="bg-blue-600 px-2 py-1 rounded text-sm">Edit</button> <button onclick="window.deletePackageItem('${p.id}')" class="bg-red-600 px-2 py-1 rounded text-sm">Del</button></div></div>`).join(''); container.innerHTML = `<h3 class="text-xl font-bold">Packages</h3><button id="newPackageBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${pkgHtml||'None'}</div>`; document.getElementById('newPackageBtn').onclick = () => showPackageForm(); window.editPackage = (id) => showPackageForm(packagesList.find(p=>p.id===id)); window.deletePackageItem = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"packages",id)); }; }
         async function showPackageForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-2xl"><h3 class="text-xl font-bold">${existing?'Edit':'New'} Package</h3><div class="grid grid-cols-2 gap-3 mt-3"><div><label>Name (el)</label><input id="pkgName" value="${existing?escapeHtml(existing.name):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Name (en)</label><input id="pkgName_en" value="${existing?escapeHtml(existing.name_en||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Price</label><input id="pkgPrice" value="${existing?escapeHtml(existing.price):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Image URL</label><input id="pkgImage" value="${existing?escapeHtml(existing.imageUrl||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Description (el)</label><textarea id="pkgDesc" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description||''):''}</textarea></div><div class="col-span-2"><label>Description (en)</label><textarea id="pkgDesc_en" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description_en||''):''}</textarea></div><div class="col-span-2"><label>Features (el) - comma</label><input id="pkgFeatures" value="${existing&&existing.features?existing.features.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Features (en) - comma</label><input id="pkgFeatures_en" value="${existing&&existing.features_en?existing.features_en.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div></div><div class="flex gap-3 mt-4"><button id="savePkgBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelPkgBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#savePkgBtn').onclick = async () => { const name = document.getElementById('pkgName').value.trim(); if(!name) return; const data = { name, name_en: document.getElementById('pkgName_en').value.trim(), price: document.getElementById('pkgPrice').value, description: document.getElementById('pkgDesc').value, description_en: document.getElementById('pkgDesc_en').value, imageUrl: document.getElementById('pkgImage').value, features: document.getElementById('pkgFeatures').value.split(',').map(f=>f.trim()), features_en: document.getElementById('pkgFeatures_en').value.split(',').map(f=>f.trim()), order: existing?existing.order:Date.now() }; if(existing) await updateDoc(doc(db,"packages",existing.id), data); else await addDoc(collection(db,"packages"), data); modalDiv.remove(); }; modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove(); }
-        async function renderLeadsTab() { const leadsSnap = await getDocs(query(collection(db,"leads"), orderBy("timestamp","desc"))); let html = `<h3 class="text-xl font-bold">Leads</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>`; leadsSnap.forEach(d=>{ const data=d.data(); html+=`<tr><td>${escapeHtml(data.name)}</td><td>${escapeHtml(data.email)}</td><td>${escapeHtml(data.packageName)}</td><td><button class="status-btn" data-id="${d.id}" data-status="✅">✅</button><button class="status-btn" data-id="${d.id}" data-status="❌">❌</button><button class="status-btn" data-id="${d.id}" data-status="❔">❔</button> ${data.status||'❔'}</td><td>${new Date(data.timestamp).toLocaleString()}</td><td><button class="delete-lead text-red-400" data-id="${d.id}"><i class="fas fa-trash"></i></button></td></tr>`; }); html+=`</tbody></table></div>`; document.getElementById('adminTabContent').innerHTML=html; document.querySelectorAll('.status-btn').forEach(b=>b.onclick=async()=>{ await updateDoc(doc(db,"leads",b.dataset.id),{status:b.dataset.status}); renderLeadsTab(); }); document.querySelectorAll('.delete-lead').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"leads",b.dataset.id)); renderLeadsTab(); }); }
+        async function renderLeadsTab() { const leadsSnap = await getDocs(query(collection(db,"leads"), orderBy("timestamp","desc"))); let html = `<h3 class="text-xl font-bold">Leads</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>`; leadsSnap.forEach(d=>{ const data=d.data(); html+=`<tr><td class="py-2">${escapeHtml(data.name)}</td><td>${escapeHtml(data.email)}</td><td>${escapeHtml(data.packageName)}</td><td><button class="status-btn" data-id="${d.id}" data-status="✅">✅</button><button class="status-btn" data-id="${d.id}" data-status="❌">❌</button><button class="status-btn" data-id="${d.id}" data-status="❔">❔</button> ${data.status||'❔'}</td><td class="text-xs">${new Date(data.timestamp).toLocaleString()}</td><td><button class="delete-lead text-red-400" data-id="${d.id}"><i class="fas fa-trash"></i></button></td></tr>`; }); html+=`</tbody></table></div>`; document.getElementById('adminTabContent').innerHTML=html; document.querySelectorAll('.status-btn').forEach(b=>b.onclick=async()=>{ await updateDoc(doc(db,"leads",b.dataset.id),{status:b.dataset.status}); renderLeadsTab(); }); document.querySelectorAll('.delete-lead').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"leads",b.dataset.id)); renderLeadsTab(); }); }
         async function renderAnnouncementsTab() { const annHtml = announcementsList.map(a=>`<div class="border-b py-2"><strong>${escapeHtml(a.title)}</strong> / ${escapeHtml(a.title_en||'')} - ${a.active!==false?'Active':'Inactive'} <button onclick="window.editAnnouncement('${a.id}')" class="ml-2 bg-blue-600 px-2 rounded text-sm">Edit</button> <button onclick="window.deleteAnnouncementItem('${a.id}')" class="bg-red-600 px-2 rounded text-sm">Del</button></div>`).join(''); document.getElementById('adminTabContent').innerHTML=`<h3 class="text-xl font-bold">Announcements</h3><button id="newAnnBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${annHtml||'None'}</div>`; document.getElementById('newAnnBtn').onclick=()=>showAnnouncementForm(); window.editAnnouncement=(id)=>showAnnouncementForm(announcementsList.find(a=>a.id===id)); window.deleteAnnouncementItem=async(id)=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"announcements",id)); renderAnnouncementsTab(); }; }
         async function showAnnouncementForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-lg"><h3 class="text-xl font-bold">${existing?'Edit':'New'} Announcement</h3><div class="mt-3"><label>Title (el)</label><input id="annTitle" value="${existing?escapeHtml(existing.title):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><label>Title (en)</label><input id="annTitle_en" value="${existing?escapeHtml(existing.title_en||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><label>Content (el)</label><textarea id="annContent" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content):''}</textarea><label>Content (en)</label><textarea id="annContent_en" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content_en||''):''}</textarea><label>Link</label><input id="annLink" value="${existing?escapeHtml(existing.link||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><label><input type="checkbox" id="annActive" ${existing&&existing.active===false?'':'checked'}> Active</label></div><div class="flex gap-3 mt-4"><button id="saveAnnBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelAnnBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`; modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; document.body.appendChild(modalDiv); modalDiv.querySelector('#saveAnnBtn').onclick = async () => { const data = { title: document.getElementById('annTitle').value, title_en: document.getElementById('annTitle_en').value, content: document.getElementById('annContent').value, content_en: document.getElementById('annContent_en').value, link: document.getElementById('annLink').value, active: document.getElementById('annActive').checked, updatedAt: new Date().toISOString(), createdAt: existing?existing.createdAt:new Date().toISOString() }; if(existing) await updateDoc(doc(db,"announcements",existing.id), data); else await addDoc(collection(db,"announcements"), data); modalDiv.remove(); renderAnnouncementsTab(); }; modalDiv.querySelector('#cancelAnnBtn').onclick = () => modalDiv.remove(); }
         async function renderContactMessagesTab() { const msgs = await getDocs(query(collection(db,"contactMessages"), orderBy("timestamp","desc"))); let html = `<h3 class="text-xl font-bold">Contact Messages</h3>`; msgs.forEach(d=>{ const m=d.data(); html+=`<div class="glass-card p-3 mb-2 rounded"><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.email)})<br>${escapeHtml(m.message)}<br><button class="delete-msg bg-red-600 text-sm px-2 py-1 rounded mt-1" data-id="${d.id}">Delete</button></div>`; }); document.getElementById('adminTabContent').innerHTML=html; document.querySelectorAll('.delete-msg').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"contactMessages",b.dataset.id)); renderContactMessagesTab(); }); }
