@@ -48,11 +48,6 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f0f1a; }
         ::-webkit-scrollbar-thumb { background: #f0b90b; border-radius: 10px; }
-        .nav-link { transition: all 0.2s; position: relative; cursor: pointer; }
-        .nav-link:hover { opacity: 0.8; }
-        .nav-link.active { font-weight: 700; }
-        .nav-link.active::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 2px; background: currentColor; border-radius: 2px; }
-        @media (max-width: 768px) { .nav-scroll { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; } .nav-flex { display: inline-flex; gap: 1.5rem; } }
         .page-transition { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .lang-btn { transition: all 0.2s; cursor: pointer; }
@@ -77,6 +72,54 @@
         .sortable-handle { cursor: grab; padding: 8px; font-size: 20px; }
         .sortable-handle:active { cursor: grabbing; }
         .section-card-image { width: 100%; max-height: 200px; object-fit: cover; border-radius: 1rem; margin-bottom: 1rem; }
+
+        /* DROPDOWN MENU STYLES */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(10, 10, 31, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.5rem 0;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .dropdown-menu a {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: #f0f0f0;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .dropdown-menu a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .dropdown-trigger {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .dropdown-menu {
+                position: fixed;
+                top: 70px;
+                left: 1rem;
+                right: 1rem;
+                width: auto;
+            }
+        }
     </style>
 </head>
 <body class="text-gray-200">
@@ -121,7 +164,6 @@
         };
         function t(key) { return translations[currentLanguage][key] || key; }
 
-        // Site settings with MAIN CAROUSEL now supporting objects with image+link
         let siteSettings = {
             primaryColor: '#f7931a',
             backgroundColor: '#0a0a1f',
@@ -149,7 +191,6 @@
             contactEmail: 'support@tradelegends.com',
             contactPhone: '+30 210 1234567',
             contactAddress: 'Αθήνα, Ελλάδα',
-            // English versions
             heroTitle_en: 'Master Crypto & Financial Markets',
             heroSubtitle_en: 'Learn to trade like a legend with expert-led courses and real market insights.',
             homeContent_en: 'Welcome to TradeLegends! Discover the world of crypto and financial markets with top mentors and an active community.',
@@ -167,14 +208,13 @@
             pricingContent_en: 'Choose the program that fits your goals. All packages include lifetime access and support.',
             pricingImage_en: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
             pricingLink_en: '',
-            // Main carousel: array of {image, link}
             mainCarousel: '[{"image":"https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200","link":"https://www.binance.com"},{"image":"https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200","link":"https://www.coinbase.com"},{"image":"https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200","link":"https://www.tradingview.com"},{"image":"https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200","link":"https://www.coingecko.com"}]',
             disclaimerText: '⚠️ ΠΡΟΣΟΧΗ: Οι επενδύσεις σε κρύπτο και χρηματοοικονομικά προϊόντα ενέχουν υψηλό κίνδυνο. Οι προηγούμενες αποδόσεις δεν εγγυώνται μελλοντικά αποτελέσματα. Το TradeLegends παρέχει αποκλειστικά εκπαιδευτικό περιεχόμενο και όχι επενδυτικές συμβουλές. Συμβουλευτείτε πάντα έναν εξειδικευμένο σύμβουλο πριν προβείτε σε επένδυση.',
             disclaimerText_en: '⚠️ WARNING: Crypto and financial investments involve high risk. Past performance does not guarantee future results. TradeLegends provides educational content only, not investment advice. Always consult a qualified advisor before investing.'
         };
         let packagesList = [];
         let announcementsList = [];
-        let mainCarouselList = []; // array of {image, link}
+        let mainCarouselList = [];
 
         function parseMainCarousel() {
             try {
@@ -387,15 +427,30 @@
                     <nav class="py-4 px-6 md:px-12 border-b border-white/10 backdrop-blur-md sticky top-0 z-50" style="background: ${bgColor}cc">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex items-center gap-3"><img src="${logoUrl}" class="w-10 h-10 rounded-full object-cover"><span class="text-xl font-extrabold" style="color:${primary}">TradeLegends</span></div>
-                            <div class="nav-scroll flex-1 flex justify-center mx-4"><div class="nav-flex flex gap-6 md:gap-8 text-sm font-medium">
-                                <a class="nav-link ${currentPage === 'home' ? 'active' : ''}" data-page="home" style="color:${primary}">${t('home')}</a>
-                                <a class="nav-link ${currentPage === 'education' ? 'active' : ''}" data-page="education" style="color:${primary}">${t('education')}</a>
-                                <a class="nav-link ${currentPage === 'mentor' ? 'active' : ''}" data-page="mentor" style="color:${primary}">${t('mentor')}</a>
-                                <a class="nav-link ${currentPage === 'community' ? 'active' : ''}" data-page="community" style="color:${primary}">${t('community')}</a>
-                                <a class="nav-link ${currentPage === 'pricing' ? 'active' : ''}" data-page="pricing" style="color:${primary}">${t('pricing')}</a>
-                                <a class="nav-link ${currentPage === 'contact' ? 'active' : ''}" data-page="contact" style="color:${primary}">${t('contact')}</a>
-                            </div></div>
-                            <div class="flex items-center gap-3"><div class="flex gap-2 text-sm font-medium"><button id="langEl" class="lang-btn ${currentLanguage === 'el' ? 'active' : ''}" style="color:${primary}">EL</button><span>|</span><button id="langEn" class="lang-btn ${currentLanguage === 'en' ? 'active' : ''}" style="color:${primary}">EN</button></div><button id="openAdminWindowBtn" class="text-sm px-4 py-2 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user-shield mr-1"></i> ${t('adminPortal')}</button></div>
+                            
+                            <!-- DROPDOWN MENU -->
+                            <div class="relative">
+                                <div class="dropdown-trigger text-sm font-medium px-3 py-2 rounded-full border border-white/30 hover:bg-white/10" style="color:${primary}">
+                                    <i class="fas fa-bars"></i> <span>Menu</span> <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                                <div class="dropdown-menu">
+                                    <a data-page="home" style="color:${primary}">${t('home')}</a>
+                                    <a data-page="education" style="color:${primary}">${t('education')}</a>
+                                    <a data-page="mentor" style="color:${primary}">${t('mentor')}</a>
+                                    <a data-page="community" style="color:${primary}">${t('community')}</a>
+                                    <a data-page="pricing" style="color:${primary}">${t('pricing')}</a>
+                                    <a data-page="contact" style="color:${primary}">${t('contact')}</a>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <div class="flex gap-2 text-sm font-medium">
+                                    <button id="langEl" class="lang-btn ${currentLanguage === 'el' ? 'active' : ''}" style="color:${primary}">EL</button>
+                                    <span>|</span>
+                                    <button id="langEn" class="lang-btn ${currentLanguage === 'en' ? 'active' : ''}" style="color:${primary}">EN</button>
+                                </div>
+                                <button id="openAdminWindowBtn" class="text-sm px-4 py-2 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user-shield mr-1"></i> ${t('adminPortal')}</button>
+                            </div>
                         </div>
                     </nav>
                     <div class="page-transition">${mainContent}</div>
@@ -418,7 +473,7 @@
             };
         };
 
-        // ADMIN VIEW - Main Carousel Editor with image+link, zoom, drag-to-reorder
+        // ADMIN VIEW (unchanged)
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
             return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-7xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">All Settings & Main Carousel</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
@@ -427,7 +482,6 @@
         async function checkAdminAuthorization(user) { if (!user) return false; const adminDocRef = doc(db, "admin", "adminData"); const adminSnap = await getDoc(adminDocRef); if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true; if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid }); return true; } return false; }
         function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10')); btn.classList.add('active-tab','bg-white/10'); if(btn.dataset.tab === 'settings') renderFullSettingsTab(); if(btn.dataset.tab === 'packages') renderPackagesTab(); if(btn.dataset.tab === 'leads') renderLeadsTab(); if(btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if(btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderFullSettingsTab(); }
         
-        // Main Carousel Editor with drag, zoom, image+link
         function renderCarouselEditor() {
             const container = document.createElement('div');
             container.className = 'space-y-3 mb-6';
@@ -461,7 +515,6 @@
                 };
                 container.appendChild(addBtn);
                 
-                // Attach zoom and delete events
                 container.querySelectorAll('.zoom-in').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const img = btn.closest('.image-preview-container').querySelector('.preview-img');
@@ -504,7 +557,6 @@
                 if(msg) { msg.innerText = "✅ Carousel saved!"; setTimeout(()=>msg.innerText="",2000); }
             }
             refreshEditor();
-            // Make sortable
             if (window.sortable) {
                 window.sortable(container, { items: '.image-editor-item', handle: '.sortable-handle', onDrop: () => {
                     const newItems = [];
@@ -563,10 +615,8 @@
                 <div><label>Disclaimer (el)</label><textarea id="disclaimerText" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div>
                 <div><label>Disclaimer (en)</label><textarea id="disclaimerText_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div>
             </div><div id="carouselEditorContainer" class="mt-6"></div><div id="carouselSaveMsg" class="text-green-400 text-sm mt-2"></div><button id="saveAllBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save Other Settings</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
-            
             const carouselContainer = document.getElementById('carouselEditorContainer');
             carouselContainer.appendChild(renderCarouselEditor());
-            
             document.getElementById('saveAllBtn').onclick = async () => {
                 const updated = {
                     primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value,
@@ -600,7 +650,29 @@
             const root = document.getElementById('root');
             if (currentMode === 'user') {
                 root.innerHTML = renderUserView();
-                document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); setPage(link.getAttribute('data-page')); }));
+                // Dropdown toggle
+                const trigger = document.querySelector('.dropdown-trigger');
+                const dropdown = document.querySelector('.dropdown-menu');
+                if (trigger && dropdown) {
+                    const toggleDropdown = (e) => {
+                        e.stopPropagation();
+                        dropdown.classList.toggle('show');
+                    };
+                    trigger.addEventListener('click', toggleDropdown);
+                    document.addEventListener('click', (e) => {
+                        if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                            dropdown.classList.remove('show');
+                        }
+                    });
+                    dropdown.querySelectorAll('a').forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const page = link.getAttribute('data-page');
+                            if (page) setPage(page);
+                            dropdown.classList.remove('show');
+                        });
+                    });
+                }
                 document.getElementById('openAdminWindowBtn')?.addEventListener('click', () => { const url = new URL(window.location.href); url.searchParams.set('admin','true'); window.open(url.toString(), '_blank', 'width=1300,height=900'); });
                 document.getElementById('langEl')?.addEventListener('click', () => { currentLanguage = 'el'; renderCurrentView(); });
                 document.getElementById('langEn')?.addEventListener('click', () => { currentLanguage = 'en'; renderCurrentView(); });
