@@ -67,17 +67,32 @@
         .carousel-dot.active { background: white; transform: scale(1.2); }
         @media (max-width: 768px) { .carousel-slide img { height: 250px; } }
         .disclaimer-card { background: rgba(0,0,0,0.6); border-left: 4px solid #f7931a; font-size: 0.8rem; }
+        .image-editor-item { transition: all 0.2s; cursor: grab; background: rgba(0,0,0,0.3); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; }
+        .image-editor-item:active { cursor: grabbing; }
+        .image-preview-container { position: relative; display: inline-block; }
+        .zoom-controls { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 4px 8px; display: flex; gap: 8px; z-index: 10; }
+        .zoom-controls button { background: none; border: none; color: white; cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 50%; transition: all 0.2s; }
+        .zoom-controls button:hover { background: rgba(255,255,255,0.2); }
+        .preview-img { transition: transform 0.2s ease; transform-origin: center center; width: 120px; height: 80px; object-fit: cover; border-radius: 0.5rem; }
+        .sortable-handle { cursor: grab; padding: 8px; font-size: 20px; }
+        .sortable-handle:active { cursor: grabbing; }
         .section-card-image { width: 100%; max-height: 200px; object-fit: cover; border-radius: 1rem; margin-bottom: 1rem; }
-        .material-card { background: rgba(0,0,0,0.4); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-left: 3px solid var(--primary-color); }
     </style>
 </head>
 <body class="text-gray-200">
-    <div id="loadingScreen" class="loading-screen"><div class="loading-content"><img src="https://i.ibb.co/Rp4NpbPL/Edit-the-existing-lo3.jpg" class="loading-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4664/4664838.png'"><div class="loading-text mt-4">TradeLegends</div><div class="loading-dots mt-2"><span>.</span><span>.</span><span>.</span></div><p class="text-gray-200 text-sm mt-4 font-medium">Loading premium content...</p></div></div>
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <img src="https://i.ibb.co/Rp4NpbPL/Edit-the-existing-lo3.jpg" alt="TradeLegends Logo" class="loading-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4664/4664838.png'">
+            <div class="loading-text mt-4">TradeLegends</div>
+            <div class="loading-dots mt-2"><span>.</span><span>.</span><span>.</span></div>
+            <p class="text-gray-200 text-sm mt-4 font-medium">Loading premium content...</p>
+        </div>
+    </div>
     <div id="root"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -99,48 +114,96 @@
         let packagesUnsubscribe = null;
         let announcementsUnsubscribe = null;
         let currentLanguage = 'el';
-        let currentUser = null;
-        let userSubscription = null; // { packageId, status }
         
         const translations = {
-            el: { home: "Αρχική", education: "Εκπαίδευση", mentor: "Mentor", community: "Κοινότητα", pricing: "Τιμολόγηση", contact: "Επικοινωνία", adminPortal: "Admin Portal", explorePackages: "Εξερεύνηση Πακέτων", latestNews: "Τελευταία Νέα & Ανακοινώσεις", contactForm: "Φόρμα Επικοινωνίας", send: "Αποστολή Μηνύματος", name: "Ονοματεπώνυμο", email: "Email", message: "Το μήνυμά σας", contactInfo: "Στοιχεία Επικοινωνίας", selectPackage: "Επιλέξτε Πακέτο", oneTime: "εφάπαξ", loading: "Φόρτωση...", noAnnouncements: "Νέες ανακοινώσεις σύντομα...", disclaimer: "⚠️ Σημαντική Αποποίηση Ευθύνης", login: "Σύνδεση", register: "Εγγραφή", logout: "Αποσύνδεση", myMaterial: "Το Υλικό μου", pendingApproval: "Η αίτησή σας εκκρεμεί για έγκριση", approved: "Εγκεκριμένο!", goToMaterial: "Μετάβαση στο υλικό" },
-            en: { home: "Home", education: "Education", mentor: "Mentor", community: "Community", pricing: "Pricing", contact: "Contact", adminPortal: "Admin Portal", explorePackages: "Explore Packages", latestNews: "Latest News & Announcements", contactForm: "Contact Form", send: "Send Message", name: "Full Name", email: "Email", message: "Your Message", contactInfo: "Contact Info", selectPackage: "Select Package", oneTime: "one-time", loading: "Loading...", noAnnouncements: "New announcements soon...", disclaimer: "⚠️ Risk Disclaimer", login: "Login", register: "Register", logout: "Logout", myMaterial: "My Material", pendingApproval: "Your request is pending approval", approved: "Approved!", goToMaterial: "Go to Material" }
+            el: { home: "Αρχική", education: "Εκπαίδευση", mentor: "Mentor", community: "Κοινότητα", pricing: "Τιμολόγηση", contact: "Επικοινωνία", adminPortal: "Admin Portal", explorePackages: "Εξερεύνηση Πακέτων", latestNews: "Τελευταία Νέα & Ανακοινώσεις", contactForm: "Φόρμα Επικοινωνίας", send: "Αποστολή Μηνύματος", name: "Ονοματεπώνυμο", email: "Email", message: "Το μήνυμά σας", contactInfo: "Στοιχεία Επικοινωνίας", selectPackage: "Επιλέξτε Πακέτο", oneTime: "εφάπαξ", loading: "Φόρτωση...", noAnnouncements: "Νέες ανακοινώσεις σύντομα...", disclaimer: "⚠️ Σημαντική Αποποίηση Ευθύνης" },
+            en: { home: "Home", education: "Education", mentor: "Mentor", community: "Community", pricing: "Pricing", contact: "Contact", adminPortal: "Admin Portal", explorePackages: "Explore Packages", latestNews: "Latest News & Announcements", contactForm: "Contact Form", send: "Send Message", name: "Full Name", email: "Email", message: "Your Message", contactInfo: "Contact Info", selectPackage: "Select Package", oneTime: "one-time", loading: "Loading...", noAnnouncements: "New announcements soon...", disclaimer: "⚠️ Risk Disclaimer" }
         };
         function t(key) { return translations[currentLanguage][key] || key; }
 
+        // Site settings with MAIN CAROUSEL now supporting objects with image+link
         let siteSettings = {
-            primaryColor: '#f7931a', backgroundColor: '#0a0a1f', textColor: '#f0f0f0',
+            primaryColor: '#f7931a',
+            backgroundColor: '#0a0a1f',
+            textColor: '#f0f0f0',
             logoUrl: 'https://cdn-icons-png.flaticon.com/512/4664/4664838.png',
             footerText: '© 2025 TradeLegends — Empowering Financial Freedom',
-            heroTitle: 'Master Crypto & Financial Markets', heroSubtitle: 'Learn to trade like a legend',
-            heroTitle_en: 'Master Crypto & Financial Markets', heroSubtitle_en: 'Learn to trade like a legend',
-            homeContent: 'Καλώς ήρθατε στο TradeLegends!', homeContent_en: 'Welcome to TradeLegends!',
-            homeImage: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800', homeLink: '',
-            educationContent: 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα.', educationContent_en: 'Discover basic and advanced topics.',
-            educationImage: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800', educationLink: '',
-            mentorContent: 'Επαγγελματίες traders με χρόνια εμπειρίας.', mentorContent_en: 'Professional traders with years of experience.',
-            mentorImage: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800', mentorLink: '',
-            communityContent: 'Αποκλειστική κοινότητα φιλόδοξων επενδυτών.', communityContent_en: 'Exclusive community of ambitious investors.',
-            communityImage: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800', communityLink: '',
-            pricingContent: 'Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας.', pricingContent_en: 'Choose the program that fits your goals.',
-            pricingImage: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800', pricingLink: '',
-            contactEmail: 'support@tradelegends.com', contactPhone: '+30 210 1234567', contactAddress: 'Αθήνα, Ελλάδα',
-            mainCarousel: '[{"image":"https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200","link":"https://www.binance.com"},{"image":"https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200","link":"https://www.coinbase.com"}]',
-            disclaimerText: '⚠️ ΠΡΟΣΟΧΗ: Οι επενδύσεις σε κρύπτο ενέχουν υψηλό κίνδυνο.', disclaimerText_en: '⚠️ WARNING: Crypto investments involve high risk.'
+            heroTitle: 'Master Crypto & Financial Markets',
+            heroSubtitle: 'Learn to trade like a legend with expert-led courses and real market insights.',
+            heroImageUrl: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=2070&auto=format',
+            homeContent: 'Καλώς ήρθατε στο TradeLegends! Ανακαλύψτε τον κόσμο των κρύπτο και των χρηματοοικονομικών αγορών με κορυφαίους mentors και μία ενεργή κοινότητα.',
+            homeImage: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            homeLink: '',
+            educationContent: 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα των κρύπτο και των χρηματοοικονομικών αγορών. Μαθήματα βίντεο, διαδραστικά quizzes και πραγματικές μελέτες περίπτωσης από ειδικούς.',
+            educationImage: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800',
+            educationLink: '',
+            mentorContent: 'Η ομάδα μας αποτελείται από επαγγελματίες traders με χρόνια εμπειρίας. Προσωπική καθοδήγηση, live sessions και στρατηγικές που αποδίδουν.',
+            mentorImage: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
+            mentorLink: '',
+            communityContent: 'Γίνετε μέλος σε μια αποκλειστική κοινότητα φιλόδοξων επενδυτών. Ανταλλάξτε ιδέες, συμμετέχετε σε webinars και λαμβάνετε καθημερινή υποστήριξη.',
+            communityImage: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800',
+            communityLink: '',
+            pricingContent: 'Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας. Όλα τα πακέτα περιλαμβάνουν пожизненную πρόσβαση και υποστήριξη.',
+            pricingImage: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            pricingLink: '',
+            contactEmail: 'support@tradelegends.com',
+            contactPhone: '+30 210 1234567',
+            contactAddress: 'Αθήνα, Ελλάδα',
+            // English versions
+            heroTitle_en: 'Master Crypto & Financial Markets',
+            heroSubtitle_en: 'Learn to trade like a legend with expert-led courses and real market insights.',
+            homeContent_en: 'Welcome to TradeLegends! Discover the world of crypto and financial markets with top mentors and an active community.',
+            homeImage_en: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            homeLink_en: '',
+            educationContent_en: 'Discover basic and advanced topics of crypto and financial markets. Video lessons, interactive quizzes, and real case studies by experts.',
+            educationImage_en: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800',
+            educationLink_en: '',
+            mentorContent_en: 'Our team consists of professional traders with years of experience. Personal guidance, live sessions, and proven strategies.',
+            mentorImage_en: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
+            mentorLink_en: '',
+            communityContent_en: 'Join an exclusive community of ambitious investors. Exchange ideas, participate in webinars, and receive daily support.',
+            communityImage_en: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800',
+            communityLink_en: '',
+            pricingContent_en: 'Choose the program that fits your goals. All packages include lifetime access and support.',
+            pricingImage_en: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            pricingLink_en: '',
+            // Main carousel: array of {image, link}
+            mainCarousel: '[{"image":"https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200","link":"https://www.binance.com"},{"image":"https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200","link":"https://www.coinbase.com"},{"image":"https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200","link":"https://www.tradingview.com"},{"image":"https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200","link":"https://www.coingecko.com"}]',
+            disclaimerText: '⚠️ ΠΡΟΣΟΧΗ: Οι επενδύσεις σε κρύπτο και χρηματοοικονομικά προϊόντα ενέχουν υψηλό κίνδυνο. Οι προηγούμενες αποδόσεις δεν εγγυώνται μελλοντικά αποτελέσματα. Το TradeLegends παρέχει αποκλειστικά εκπαιδευτικό περιεχόμενο και όχι επενδυτικές συμβουλές. Συμβουλευτείτε πάντα έναν εξειδικευμένο σύμβουλο πριν προβείτε σε επένδυση.',
+            disclaimerText_en: '⚠️ WARNING: Crypto and financial investments involve high risk. Past performance does not guarantee future results. TradeLegends provides educational content only, not investment advice. Always consult a qualified advisor before investing.'
         };
-        
         let packagesList = [];
         let announcementsList = [];
-        let mainCarouselList = [];
+        let mainCarouselList = []; // array of {image, link}
 
         function parseMainCarousel() {
-            try { mainCarouselList = JSON.parse(siteSettings.mainCarousel); } catch(e) { mainCarouselList = []; }
-            if (!mainCarouselList.length) mainCarouselList = [{image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200', link: ''}];
+            try {
+                if (typeof siteSettings.mainCarousel === 'string') {
+                    mainCarouselList = JSON.parse(siteSettings.mainCarousel);
+                } else if (Array.isArray(siteSettings.mainCarousel)) {
+                    mainCarouselList = siteSettings.mainCarousel;
+                } else { mainCarouselList = []; }
+            } catch(e) { mainCarouselList = []; }
+            if (!mainCarouselList.length) {
+                mainCarouselList = [{image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200', link: 'https://www.binance.com'}];
+            }
         }
 
-        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-        function applyTheme(s) { document.body.style.backgroundColor = s.backgroundColor; document.body.style.color = s.textColor; }
-        function getLocalizedField(field) { let val = siteSettings[field]; if (currentLanguage === 'en' && siteSettings[field + '_en']) val = siteSettings[field + '_en']; return escapeHtml(val); }
+        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+        function applyTheme(settings) {
+            if (!settings) return;
+            document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+            document.body.style.backgroundColor = settings.backgroundColor;
+            document.body.style.color = settings.textColor;
+        }
+        function getLocalizedField(field) {
+            let val = siteSettings[field];
+            if (currentLanguage === 'en' && siteSettings[field + '_en']) val = siteSettings[field + '_en'];
+            return escapeHtml(val);
+        }
+        function getDisclaimerText() {
+            return currentLanguage === 'en' ? escapeHtml(siteSettings.disclaimerText_en) : escapeHtml(siteSettings.disclaimerText);
+        }
 
         function initRealtimeSync() {
             if (settingsUnsubscribe) settingsUnsubscribe();
@@ -153,13 +216,17 @@
                 renderCurrentView();
             });
             if (packagesUnsubscribe) packagesUnsubscribe();
-            packagesUnsubscribe = onSnapshot(query(collection(db, "packages"), orderBy("order", "asc")), (snapshot) => {
-                packagesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const q = query(collection(db, "packages"), orderBy("order", "asc"));
+            packagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                packagesList = [];
+                snapshot.forEach(doc => packagesList.push({ id: doc.id, ...doc.data() }));
                 renderCurrentView();
             });
             if (announcementsUnsubscribe) announcementsUnsubscribe();
-            announcementsUnsubscribe = onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc")), (snapshot) => {
-                announcementsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const announcementsQuery = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
+            announcementsUnsubscribe = onSnapshot(announcementsQuery, (snapshot) => {
+                announcementsList = [];
+                snapshot.forEach(doc => announcementsList.push({ id: doc.id, ...doc.data() }));
                 renderCurrentView();
             });
         }
@@ -169,53 +236,74 @@
         let currentMainSlide = 0;
 
         function setPage(page) { currentPage = page; window.location.hash = page; renderCurrentView(); }
-        function getPageFromHash() { let hash = window.location.hash.substring(1); return ['home','education','mentor','community','pricing','contact','material'].includes(hash) ? hash : 'home'; }
+        function getPageFromHash() { let hash = window.location.hash.substring(1); if (['home','education','mentor','community','pricing','contact'].includes(hash)) return hash; return 'home'; }
         window.addEventListener('hashchange', () => { if (currentMode === 'user') { currentPage = getPageFromHash(); renderCurrentView(); } });
 
         function initMainCarousel() {
             if (mainCarouselInterval) clearInterval(mainCarouselInterval);
-            const slides = document.getElementById('mainCarouselSlides');
-            const dots = document.getElementById('mainCarouselDots');
-            if (!slides || !dots || !mainCarouselList.length) return;
-            slides.innerHTML = '';
+            const slidesContainer = document.getElementById('mainCarouselSlides');
+            const dotsContainer = document.getElementById('mainCarouselDots');
+            if (!slidesContainer || !dotsContainer || mainCarouselList.length === 0) return;
+            slidesContainer.innerHTML = '';
             mainCarouselList.forEach((item, idx) => {
-                const div = document.createElement('div');
-                div.className = 'carousel-slide';
-                const img = `<img src="${escapeHtml(item.image)}" onerror="this.src='https://via.placeholder.com/1200x400'">`;
-                div.innerHTML = item.link ? `<a href="${escapeHtml(item.link)}" target="_blank">${img}</a>` : img;
-                slides.appendChild(div);
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'carousel-slide';
+                const linkUrl = item.link && item.link.trim() ? item.link : '#';
+                const imgHtml = `<img src="${escapeHtml(item.image)}" alt="Slide ${idx+1}" onerror="this.src='https://via.placeholder.com/1200x400?text=Image+Not+Found'">`;
+                if (linkUrl !== '#') {
+                    slideDiv.innerHTML = `<a href="${escapeHtml(linkUrl)}" target="_blank" rel="noopener noreferrer">${imgHtml}</a>`;
+                } else {
+                    slideDiv.innerHTML = imgHtml;
+                }
+                slidesContainer.appendChild(slideDiv);
             });
-            dots.innerHTML = '';
+            dotsContainer.innerHTML = '';
             mainCarouselList.forEach((_, idx) => {
                 const dot = document.createElement('div');
                 dot.className = `carousel-dot ${idx === 0 ? 'active' : ''}`;
-                dot.onclick = () => goToSlide(idx);
-                dots.appendChild(dot);
+                dot.addEventListener('click', () => goToMainSlide(idx));
+                dotsContainer.appendChild(dot);
             });
-            function goToSlide(idx) {
-                currentMainSlide = idx;
-                slides.style.transform = `translateX(-${idx * 100}%)`;
-                document.querySelectorAll('#mainCarouselDots .carousel-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+            function goToMainSlide(index) {
+                currentMainSlide = index;
+                slidesContainer.style.transform = `translateX(-${currentMainSlide * 100}%)`;
+                document.querySelectorAll('#mainCarouselDots .carousel-dot').forEach((dot, i) => {
+                    if (i === currentMainSlide) dot.classList.add('active');
+                    else dot.classList.remove('active');
+                });
             }
-            mainCarouselInterval = setInterval(() => { if (mainCarouselList.length) goToSlide((currentMainSlide + 1) % mainCarouselList.length); }, 5000);
-            goToSlide(0);
+            window.goToMainSlide = goToMainSlide;
+            mainCarouselInterval = setInterval(() => {
+                if (mainCarouselList.length > 0) {
+                    currentMainSlide = (currentMainSlide + 1) % mainCarouselList.length;
+                    goToMainSlide(currentMainSlide);
+                }
+            }, 5000);
+            goToMainSlide(0);
         }
 
-        function renderSectionCard(content, img, link, primary) {
-            const imgHtml = img ? `<img src="${escapeHtml(img)}" class="section-card-image" onerror="this.src='https://via.placeholder.com/800x200'">` : '';
+        function renderSectionCard(content, imageUrl, linkUrl, primaryColor) {
+            const imgHtml = imageUrl ? `<img src="${escapeHtml(imageUrl)}" class="section-card-image w-full h-48 object-cover rounded-xl mb-4" onerror="this.src='https://via.placeholder.com/800x200?text=Image'">` : '';
             const contentHtml = `<p class="text-lg leading-relaxed">${content}</p>`;
-            if (link && link.trim()) return `<a href="${escapeHtml(link)}" target="_blank" class="block glass-card p-8 rounded-2xl transition hover:scale-[1.01]" style="background: rgba(0,0,0,0.3); border: 1px solid ${primary}40;">${imgHtml}${contentHtml}</a>`;
+            if (linkUrl && linkUrl.trim()) {
+                return `<a href="${escapeHtml(linkUrl)}" target="_blank" rel="noopener noreferrer" class="block glass-card p-8 rounded-2xl transition hover:scale-[1.01]" style="background: rgba(0,0,0,0.3); border: 1px solid ${primaryColor}40;">${imgHtml}${contentHtml}</a>`;
+            }
             return `<div class="glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);">${imgHtml}${contentHtml}</div>`;
         }
 
         function renderHomePage(primary) {
-            const announcementsHtml = announcementsList.filter(a => a.active !== false).length ? 
-                `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${announcementsList.filter(a => a.active !== false).map(ann => {
+            const announcementsHtml = (() => {
+                const active = announcementsList.filter(a => a.active !== false);
+                if (!active.length) return `<div class="text-center text-gray-400 py-8"><i class="fas fa-newspaper"></i> ${t('noAnnouncements')}</div>`;
+                return `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${active.map(ann => {
                     let title = ann.title, content = ann.content;
                     if (currentLanguage === 'en' && ann.title_en) title = ann.title_en;
                     if (currentLanguage === 'en' && ann.content_en) content = ann.content_en;
-                    return `<div class="glass-card p-5 rounded-xl" style="border-left: 3px solid ${primary};"><h3 class="text-xl font-bold mb-2" style="color:${primary}">${escapeHtml(title)}</h3><p class="text-gray-200 text-sm">${escapeHtml(content)}</p>${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" class="inline-block mt-3 text-xs" style="color:${primary}">Learn more →</a>` : ''}</div>`;
-                }).join('')}</div>` : `<div class="text-center text-gray-400 py-8">${t('noAnnouncements')}</div>`;
+                    return `<div class="announcement-card glass-card p-5 rounded-xl" style="background: rgba(0,0,0,0.35); border-left: 3px solid ${primary};"><div class="flex items-start justify-between"><h3 class="text-xl font-bold mb-2" style="color:${primary}">${escapeHtml(title)}</h3><span class="text-xs text-gray-400">${ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : ''}</span></div><p class="text-gray-200 text-sm leading-relaxed">${escapeHtml(content)}</p>${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" class="inline-block mt-3 text-xs font-semibold" style="color:${primary}"><i class="fas fa-external-link-alt"></i> ${currentLanguage === 'en' ? 'Learn more' : 'Μάθετε περισσότερα'}</a>` : ''}</div>` }).join('')}</div>`;
+            })();
+            const homeImg = getLocalizedField('homeImage');
+            const homeLink = getLocalizedField('homeLink');
+            const homeContentHtml = renderSectionCard(getLocalizedField('homeContent'), homeImg, homeLink, primary);
             return `
                 <div class="relative overflow-hidden pt-8 pb-8">
                     <div class="absolute inset-0 hero-gradient opacity-40"></div>
@@ -223,64 +311,63 @@
                         <div class="flex flex-col lg:flex-row items-center gap-12">
                             <div class="flex-1 text-center lg:text-left">
                                 <h1 class="text-5xl md:text-6xl font-extrabold mb-4">${getLocalizedField('heroTitle')}</h1>
-                                <p class="text-xl text-gray-300 mb-8">${getLocalizedField('heroSubtitle')}</p>
+                                <p class="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 mb-8">${getLocalizedField('heroSubtitle')}</p>
                                 <a href="#pricing" class="px-6 py-3 rounded-full font-bold btn-glow inline-block" style="background:${primary}; color:#fff;">${t('explorePackages')}</a>
                             </div>
-                            <div class="flex-1"><div class="carousel-container"><div id="mainCarouselSlides" class="carousel-slides"></div><div id="mainCarouselDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div></div></div>
+                            <div class="flex-1">
+                                <div class="carousel-container"><div id="mainCarouselSlides" class="carousel-slides"></div><div id="mainCarouselDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="container mx-auto px-6 py-12"><div class="max-w-4xl mx-auto">${renderSectionCard(getLocalizedField('homeContent'), getLocalizedField('homeImage'), getLocalizedField('homeLink'), primary)}</div></div>
-                <div class="container mx-auto px-6 pb-8"><div class="disclaimer-card glass-card p-4 rounded-xl max-w-3xl mx-auto flex items-start gap-3" style="border-left-color: ${primary};"><i class="fas fa-exclamation-triangle text-xl" style="color:${primary}"></i><div><h4 class="font-bold text-sm" style="color:${primary}">${t('disclaimer')}</h4><p class="text-xs text-gray-300">${currentLanguage === 'en' ? escapeHtml(siteSettings.disclaimerText_en) : escapeHtml(siteSettings.disclaimerText)}</p></div></div></div>
+                <div class="container mx-auto px-6 py-12"><div class="max-w-4xl mx-auto">${homeContentHtml}</div></div>
+                <div class="container mx-auto px-6 pb-8"><div class="disclaimer-card glass-card p-4 rounded-xl max-w-3xl mx-auto flex items-start gap-3" style="background: rgba(0,0,0,0.5); border-left-color: ${primary};"><i class="fas fa-exclamation-triangle text-xl mt-0.5" style="color: ${primary}"></i><div><h4 class="font-bold text-sm mb-1" style="color: ${primary}">${t('disclaimer')}</h4><p class="text-xs text-gray-300 leading-relaxed">${getDisclaimerText()}</p></div></div></div>
                 <div class="container mx-auto px-6 py-12 border-t border-white/10"><div class="flex items-center gap-3 justify-center mb-8"><i class="fas fa-bullhorn text-3xl" style="color:${primary}"></i><h2 class="text-3xl font-bold">${t('latestNews')}</h2></div>${announcementsHtml}</div>
             `;
         }
         
-        function renderEducationPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-graduation-cap text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl font-bold">${t('education')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(getLocalizedField('educationContent'), getLocalizedField('educationImage'), getLocalizedField('educationLink'), primary)}</div></div>`; }
-        function renderMentorPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-chalkboard-user text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl font-bold">${t('mentor')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(getLocalizedField('mentorContent'), getLocalizedField('mentorImage'), getLocalizedField('mentorLink'), primary)}</div></div>`; }
-        function renderCommunityPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-users text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl font-bold">${t('community')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(getLocalizedField('communityContent'), getLocalizedField('communityImage'), getLocalizedField('communityLink'), primary)}</div></div>`; }
-        
+        function renderEducationPage(primary) {
+            const img = getLocalizedField('educationImage');
+            const link = getLocalizedField('educationLink');
+            const content = getLocalizedField('educationContent');
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-graduation-cap text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('education')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(content, img, link, primary)}</div></div>`;
+        }
+        function renderMentorPage(primary) {
+            const img = getLocalizedField('mentorImage');
+            const link = getLocalizedField('mentorLink');
+            const content = getLocalizedField('mentorContent');
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-chalkboard-user text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('mentor')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(content, img, link, primary)}</div></div>`;
+        }
+        function renderCommunityPage(primary) {
+            const img = getLocalizedField('communityImage');
+            const link = getLocalizedField('communityLink');
+            const content = getLocalizedField('communityContent');
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-users text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('community')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(content, img, link, primary)}</div></div>`;
+        }
         function renderPricingPage(primary) {
+            const img = getLocalizedField('pricingImage');
+            const link = getLocalizedField('pricingLink');
+            const content = getLocalizedField('pricingContent');
             const packagesHtml = packagesList.map(pkg => {
                 let name = pkg.name, description = pkg.description || '', features = pkg.features || [];
-                if (currentLanguage === 'en') { if (pkg.name_en) name = pkg.name_en; if (pkg.description_en) description = pkg.description_en; if (pkg.features_en) features = pkg.features_en; }
-                return `<div class="package-card glass-card p-6 rounded-2xl flex flex-col" style="border-left: 4px solid ${primary};">
-                    ${pkg.imageUrl ? `<img src="${pkg.imageUrl}" class="w-full h-44 object-cover rounded-xl mb-4">` : `<div class="w-full h-44 bg-gray-800 rounded-xl mb-4 flex items-center justify-center"><i class="fas fa-coins text-4xl" style="color:${primary}"></i></div>`}
+                if (currentLanguage === 'en') {
+                    if (pkg.name_en) name = pkg.name_en;
+                    if (pkg.description_en) description = pkg.description_en;
+                    if (pkg.features_en && Array.isArray(pkg.features_en)) features = pkg.features_en;
+                }
+                return `<div class="package-card glass-card p-6 rounded-2xl flex flex-col" style="background: rgba(0,0,0,0.45); backdrop-filter: blur(10px); border-left: 4px solid ${primary};">
+                    ${pkg.imageUrl ? `<img src="${pkg.imageUrl}" class="w-full h-44 object-cover rounded-xl mb-4">` : `<div class="w-full h-44 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl mb-4 flex items-center justify-center"><i class="fas fa-coins text-4xl opacity-60" style="color:${primary}"></i></div>`}
                     <h3 class="text-2xl font-bold mb-2">${escapeHtml(name)}</h3>
                     <p class="text-gray-300 text-sm mb-3 flex-grow">${escapeHtml(description)}</p>
                     <div class="flex items-baseline gap-2 mb-3"><span class="text-3xl font-black" style="color:${primary}">${escapeHtml(pkg.price || '€199')}</span><span class="text-sm text-gray-400">${t('oneTime')}</span></div>
                     <div class="mb-4 text-xs text-gray-300">${features.map(f => `<span class="inline-block mr-2"><i class="fas fa-check-circle" style="color:${primary}"></i> ${escapeHtml(f)}</span>`).join('')}</div>
-                    <button onclick="window.requestPackage('${pkg.id}', '${escapeHtml(name).replace(/'/g, "\\'")}')" class="mt-3 py-2 px-4 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('selectPackage')} →</button>
+                    <button onclick="window.selectPackage('${pkg.id}', '${escapeHtml(name).replace(/'/g, "\\'")}')" class="mt-3 py-2 px-4 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('selectPackage')} <i class="fas fa-arrow-right ml-1"></i></button>
                 </div>`;
             }).join('');
-            const pricingCard = renderSectionCard(getLocalizedField('pricingContent'), getLocalizedField('pricingImage'), getLocalizedField('pricingLink'), primary);
-            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-8"><h1 class="text-4xl font-bold">${t('pricing')}</h1></div><div class="max-w-4xl mx-auto mb-12">${pricingCard}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${packagesList.length ? packagesHtml : `<div class="col-span-full text-center py-12">${t('loading')}</div>`}</div></div>`;
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-8"><h1 class="text-4xl md:text-5xl font-bold">${t('pricing')}</h1></div><div class="max-w-4xl mx-auto mb-12">${renderSectionCard(content, img, link, primary)}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${packagesList.length === 0 ? `<div class="col-span-full text-center py-12">${t('loading')}</div>` : packagesHtml}</div></div>`;
         }
-        
         function renderContactPage(primary) {
-            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-envelope text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl font-bold">${t('contact')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><div class="grid md:grid-cols-2 gap-8"><div><h3 class="text-xl font-bold mb-4">${t('contactInfo')}</h3><div class="space-y-3"><div><i class="fas fa-envelope"></i> ${escapeHtml(siteSettings.contactEmail)}</div><div><i class="fas fa-phone-alt"></i> ${escapeHtml(siteSettings.contactPhone)}</div><div><i class="fas fa-map-marker-alt"></i> ${escapeHtml(siteSettings.contactAddress)}</div></div></div><div><h3 class="text-xl font-bold mb-4">${t('contactForm')}</h3><form id="contactForm"><input type="text" id="contactName" placeholder="${t('name')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800" required><input type="email" id="contactEmailInput" placeholder="${t('email')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800" required><textarea id="contactMessage" rows="4" placeholder="${t('message')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800" required></textarea><button type="submit" class="px-6 py-2 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('send')}</button></form><div id="contactFormMsg" class="mt-3 text-sm text-green-400"></div></div></div></div></div>`;
-        }
-        
-        function renderMaterialPage(primary) {
-            if (!currentUser) {
-                return `<div class="container mx-auto px-6 py-20 text-center"><div class="glass-card p-8 max-w-md mx-auto"><h2 class="text-2xl font-bold mb-4">${currentLanguage === 'en' ? 'Please login' : 'Συνδεθείτε'}</h2><div id="materialLoginForm"><input type="email" id="matEmail" placeholder="Email" class="w-full p-2 mb-3 rounded bg-gray-800"><input type="password" id="matPassword" placeholder="Password" class="w-full p-2 mb-3 rounded bg-gray-800"><button id="matLoginBtn" class="px-4 py-2 rounded bg-amber-500">${t('login')}</button><button id="matRegisterBtn" class="px-4 py-2 rounded bg-gray-600 ml-2">${t('register')}</button></div><div id="matMsg" class="mt-3 text-sm"></div></div></div>`;
-            }
-            if (!userSubscription || userSubscription.status !== 'approved') {
-                return `<div class="container mx-auto px-6 py-20 text-center"><div class="glass-card p-8 max-w-md mx-auto"><i class="fas fa-clock text-4xl mb-3" style="color:${primary}"></i><h2 class="text-2xl font-bold">${t('pendingApproval')}</h2><p class="text-gray-400 mt-2">${currentLanguage === 'en' ? 'Wait for admin approval' : 'Περιμένετε έγκριση από τον διαχειριστή'}</p></div></div>`;
-            }
-            const pkg = packagesList.find(p => p.id === userSubscription.packageId);
-            if (!pkg) return `<div class="container mx-auto px-6 py-20 text-center">Package not found</div>`;
-            const material = pkg.material || { content: '', links: [], videos: [] };
-            return `
-                <div class="container mx-auto px-6 py-20">
-                    <div class="text-center mb-10"><i class="fas fa-gem text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl font-bold">${escapeHtml(pkg.name)} - ${t('myMaterial')}</h1></div>
-                    <div class="max-w-4xl mx-auto space-y-6">
-                        <div class="material-card"><h3 class="text-xl font-bold mb-3" style="color:${primary}">📘 ${currentLanguage === 'en' ? 'Content' : 'Περιεχόμενο'}</h3><div class="prose">${material.content || (currentLanguage === 'en' ? 'No content yet' : 'Δεν υπάρχει περιεχόμενο ακόμα')}</div></div>
-                        ${material.links && material.links.length ? `<div class="material-card"><h3 class="text-xl font-bold mb-3" style="color:${primary}">🔗 ${currentLanguage === 'en' ? 'Useful Links' : 'Χρήσιμοι Σύνδεσμοι'}</h3><ul class="list-disc pl-5 space-y-2">${material.links.map(l => `<li><a href="${escapeHtml(l.url)}" target="_blank" class="hover:underline" style="color:${primary}">${escapeHtml(l.title)}</a></li>`).join('')}</ul></div>` : ''}
-                        ${material.videos && material.videos.length ? `<div class="material-card"><h3 class="text-xl font-bold mb-3" style="color:${primary}">🎥 ${currentLanguage === 'en' ? 'Videos' : 'Βίντεο'}</h3><div class="space-y-4">${material.videos.map(v => `<div><h4 class="font-semibold">${escapeHtml(v.title)}</h4><div class="mt-2">${v.embedCode || `<a href="${escapeHtml(v.url)}" target="_blank" class="hover:underline" style="color:${primary}">${escapeHtml(v.url)}</a>`}</div></div>`).join('')}</div></div>` : ''}
-                    </div>
-                </div>
-            `;
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-envelope text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('contact')}</h1><p class="text-gray-400 mt-2">${currentLanguage === 'en' ? 'Send us a message' : 'Στείλτε μας μήνυμα'}</p></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><div class="grid md:grid-cols-2 gap-8"><div><h3 class="text-xl font-bold mb-4">${t('contactInfo')}</h3><div class="space-y-3"><div><i class="fas fa-envelope w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactEmail)}</div><div><i class="fas fa-phone-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactPhone)}</div><div><i class="fas fa-map-marker-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactAddress)}</div></div></div><div><h3 class="text-xl font-bold mb-4">${t('contactForm')}</h3><form id="contactForm"><input type="text" id="contactName" placeholder="${t('name')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><input type="email" id="contactEmailInput" placeholder="${t('email')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><textarea id="contactMessage" rows="4" placeholder="${t('message')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required></textarea><button type="submit" class="px-6 py-2 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('send')}</button></form><div id="contactFormMsg" class="mt-3 text-sm text-green-400"></div></div></div></div></div>`;
         }
 
         function renderUserView() {
@@ -294,19 +381,12 @@
             else if (currentPage === 'community') mainContent = renderCommunityPage(primary);
             else if (currentPage === 'pricing') mainContent = renderPricingPage(primary);
             else if (currentPage === 'contact') mainContent = renderContactPage(primary);
-            else if (currentPage === 'material') mainContent = renderMaterialPage(primary);
             else mainContent = renderHomePage(primary);
-            
-            const authButton = currentUser ? 
-                `<button id="logoutBtn" class="text-sm px-3 py-1 rounded-full bg-red-600/80 hover:bg-red-600"><i class="fas fa-sign-out-alt"></i> ${t('logout')}</button>
-                 <a href="#material" class="text-sm px-3 py-1 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-folder-open"></i> ${t('myMaterial')}</a>` :
-                `<button id="showAuthModalBtn" class="text-sm px-3 py-1 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user"></i> ${t('login')}</button>`;
-            
             return `
                 <div class="min-h-screen" style="background: ${bgColor}">
                     <nav class="py-4 px-6 md:px-12 border-b border-white/10 backdrop-blur-md sticky top-0 z-50" style="background: ${bgColor}cc">
                         <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex items-center gap-3"><img src="${logoUrl}" class="w-10 h-10 rounded-full"><span class="text-xl font-extrabold" style="color:${primary}">TradeLegends</span></div>
+                            <div class="flex items-center gap-3"><img src="${logoUrl}" class="w-10 h-10 rounded-full object-cover"><span class="text-xl font-extrabold" style="color:${primary}">TradeLegends</span></div>
                             <div class="nav-scroll flex-1 flex justify-center mx-4"><div class="nav-flex flex gap-6 md:gap-8 text-sm font-medium">
                                 <a class="nav-link ${currentPage === 'home' ? 'active' : ''}" data-page="home" style="color:${primary}">${t('home')}</a>
                                 <a class="nav-link ${currentPage === 'education' ? 'active' : ''}" data-page="education" style="color:${primary}">${t('education')}</a>
@@ -315,196 +395,206 @@
                                 <a class="nav-link ${currentPage === 'pricing' ? 'active' : ''}" data-page="pricing" style="color:${primary}">${t('pricing')}</a>
                                 <a class="nav-link ${currentPage === 'contact' ? 'active' : ''}" data-page="contact" style="color:${primary}">${t('contact')}</a>
                             </div></div>
-                            <div class="flex items-center gap-3"><div class="flex gap-2 text-sm"><button id="langEl" class="lang-btn ${currentLanguage === 'el' ? 'active' : ''}" style="color:${primary}">EL</button><span>|</span><button id="langEn" class="lang-btn ${currentLanguage === 'en' ? 'active' : ''}" style="color:${primary}">EN</button></div>${authButton}<button id="openAdminWindowBtn" class="text-sm px-3 py-1 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user-shield"></i></button></div>
+                            <div class="flex items-center gap-3"><div class="flex gap-2 text-sm font-medium"><button id="langEl" class="lang-btn ${currentLanguage === 'el' ? 'active' : ''}" style="color:${primary}">EL</button><span>|</span><button id="langEn" class="lang-btn ${currentLanguage === 'en' ? 'active' : ''}" style="color:${primary}">EN</button></div><button id="openAdminWindowBtn" class="text-sm px-4 py-2 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user-shield mr-1"></i> ${t('adminPortal')}</button></div>
                         </div>
                     </nav>
                     <div class="page-transition">${mainContent}</div>
                     <footer class="border-t border-white/10 py-8 text-center text-gray-400 text-sm">${escapeHtml(siteSettings.footerText)}</footer>
                 </div>
-                <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000] hidden p-4"><div class="glass-card max-w-md w-full p-6 rounded-2xl"><h3 class="text-2xl font-bold mb-4 text-center">${t('login')} / ${t('register')}</h3><input type="email" id="authEmail" placeholder="Email" class="w-full p-3 mb-3 rounded-lg bg-gray-800"><input type="password" id="authPassword" placeholder="Password" class="w-full p-3 mb-4 rounded-lg bg-gray-800"><div class="flex gap-3"><button id="authLoginBtn" class="flex-1 py-2 rounded-full font-bold" style="background:${primary}">${t('login')}</button><button id="authRegisterBtn" class="flex-1 py-2 rounded-full border border-white/30">${t('register')}</button></div><div id="authMsg" class="mt-3 text-sm text-center"></div><button class="absolute top-3 right-4 text-white text-2xl" onclick="document.getElementById('authModal').classList.add('hidden')">&times;</button></div></div>
             `;
         }
 
-        window.requestPackage = async (packageId, packageName) => {
-            if (!currentUser) {
-                document.getElementById('showAuthModalBtn')?.click();
-                alert(currentLanguage === 'en' ? 'Please login first' : 'Πρώτα συνδεθείτε');
-                return;
-            }
-            const existing = await getDocs(query(collection(db, "subscriptions"), where("userId", "==", currentUser.uid), where("packageId", "==", packageId)));
-            if (!existing.empty) {
-                alert(currentLanguage === 'en' ? 'You already requested this package' : 'Έχετε ήδη αιτηθεί αυτό το πακέτο');
-                return;
-            }
-            await addDoc(collection(db, "subscriptions"), {
-                userId: currentUser.uid, userEmail: currentUser.email, packageId, packageName,
-                status: "pending", requestedAt: new Date().toISOString()
-            });
-            alert(currentLanguage === 'en' ? `Request sent for ${packageName}. Wait for admin approval.` : `Αίτηση για ${packageName} στάλθηκε. Περιμένετε έγκριση.`);
-            await loadUserSubscription();
+        window.selectPackage = (packageId, packageName) => {
+            const modalDiv = document.createElement('div');
+            modalDiv.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000] p-4';
+            modalDiv.innerHTML = `<div class="glass-card max-w-md w-full p-6 rounded-2xl relative" style="background:#11121f;"><button class="absolute top-3 right-4 text-white text-2xl" onclick="this.closest('.fixed').remove()">&times;</button><h3 class="text-2xl font-bold mb-2" style="color:${siteSettings.primaryColor}">${currentLanguage === 'en' ? 'Select Package' : 'Επιλογή Πακέτου'}</h3><p class="mb-4">${currentLanguage === 'en' ? 'You are interested in' : 'Ενδιαφέρεστε για'} <strong>${escapeHtml(packageName)}</strong>. ${currentLanguage === 'en' ? 'Leave your details.' : 'Αφήστε τα στοιχεία σας.'}</p><input type="text" id="leadName" placeholder="${t('name')}" class="w-full mb-3 p-3 rounded-lg bg-gray-800 border border-gray-700"><input type="email" id="leadEmail" placeholder="${t('email')}" class="w-full mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700"><button id="submitLeadBtn" class="w-full py-2 rounded-full font-bold" style="background:${siteSettings.primaryColor}; color:#000">${t('send')}</button></div>`;
+            document.body.appendChild(modalDiv);
+            document.getElementById('submitLeadBtn').onclick = async () => {
+                const name = document.getElementById('leadName').value.trim();
+                const email = document.getElementById('leadEmail').value.trim();
+                if (!name || !email) { alert(currentLanguage === 'en' ? 'Please fill name and email' : 'Συμπληρώστε όνομα και email'); return; }
+                try { await addDoc(collection(db, "leads"), { packageId, packageName, name, email, timestamp: new Date().toISOString(), status: "❔" }); alert(currentLanguage === 'en' ? `Thank you! You selected ${packageName}.` : `Ευχαριστούμε! Επιλέξατε το πακέτο ${packageName}.`); modalDiv.remove(); } 
+                catch(e) { alert("Error: " + e.message); }
+            };
         };
 
-        async function loadUserSubscription() {
-            if (!currentUser) { userSubscription = null; return; }
-            const q = query(collection(db, "subscriptions"), where("userId", "==", currentUser.uid), where("status", "==", "approved"));
-            const snap = await getDocs(q);
-            if (!snap.empty) userSubscription = { id: snap.docs[0].id, ...snap.docs[0].data() };
-            else userSubscription = null;
-            if (currentPage === 'material') renderCurrentView();
-        }
-
-        // ADMIN VIEW - with Subscriptions tab
+        // ADMIN VIEW - Main Carousel Editor with image+link, zoom, drag-to-reorder
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
-            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-7xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">Settings</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="subscriptions">Subscriptions</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
+            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-7xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">All Settings & Main Carousel</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
         }
         function renderAdminLogin() { return `<div class="min-h-screen flex items-center justify-center p-5" style="background:#0a0a14;"><div class="glass-card max-w-md w-full p-8 rounded-2xl"><div class="text-center mb-6"><i class="fas fa-shield-alt text-5xl" style="color:#f7931a"></i><h2 class="text-2xl font-bold mt-2">Admin Auth</h2></div><div id="adminAuthForm"><input type="email" id="adminEmail" placeholder="Email" class="w-full mb-3 p-3 rounded-lg bg-gray-800"><input type="password" id="adminPassword" placeholder="Password" class="w-full mb-4 p-3 rounded-lg bg-gray-800"><button id="adminLoginBtn" class="w-full py-2 rounded-full font-bold mb-2" style="background:#f7931a; color:#000">Login</button><button id="adminRegisterBtn" class="w-full py-2 rounded-full border border-gray-500">Register (Admin)</button></div><div id="adminAuthMsg" class="text-red-400 text-sm mt-3 text-center"></div></div></div>`; }
         async function checkAdminAuthorization(user) { if (!user) return false; const adminDocRef = doc(db, "admin", "adminData"); const adminSnap = await getDoc(adminDocRef); if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true; if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid }); return true; } return false; }
+        function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10')); btn.classList.add('active-tab','bg-white/10'); if(btn.dataset.tab === 'settings') renderFullSettingsTab(); if(btn.dataset.tab === 'packages') renderPackagesTab(); if(btn.dataset.tab === 'leads') renderLeadsTab(); if(btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if(btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderFullSettingsTab(); }
         
-        function loadAdminDashboardLogic() {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10'));
-                    btn.classList.add('active-tab','bg-white/10');
-                    if(btn.dataset.tab === 'settings') renderAdminSettingsTab();
-                    if(btn.dataset.tab === 'packages') renderAdminPackagesTab();
-                    if(btn.dataset.tab === 'subscriptions') renderAdminSubscriptionsTab();
-                    if(btn.dataset.tab === 'leads') renderAdminLeadsTab();
-                    if(btn.dataset.tab === 'announcements') renderAdminAnnouncementsTab();
-                    if(btn.dataset.tab === 'contacts') renderAdminContactsTab();
+        // Main Carousel Editor with drag, zoom, image+link
+        function renderCarouselEditor() {
+            const container = document.createElement('div');
+            container.className = 'space-y-3 mb-6';
+            function refreshEditor() {
+                container.innerHTML = '<h3 class="font-bold text-lg mb-3">🎠 Main Carousel Images (drag to reorder, click images to zoom, add links)</h3>';
+                mainCarouselList.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'image-editor-item flex flex-col md:flex-row items-center gap-4';
+                    div.setAttribute('data-idx', idx);
+                    div.innerHTML = `
+                        <div class="sortable-handle"><i class="fas fa-grip-vertical text-gray-400 text-2xl"></i></div>
+                        <div class="image-preview-container relative">
+                            <img src="${escapeHtml(item.image)}" class="preview-img" onerror="this.src='https://via.placeholder.com/120x80?text=Error'">
+                            <div class="zoom-controls"><button class="zoom-in" data-idx="${idx}"><i class="fas fa-search-plus"></i></button><button class="zoom-out" data-idx="${idx}"><i class="fas fa-search-minus"></i></button></div>
+                        </div>
+                        <div class="flex-1 w-full space-y-2">
+                            <input type="text" class="image-url w-full p-2 rounded bg-gray-700 text-sm" value="${escapeHtml(item.image)}" placeholder="Image URL">
+                            <input type="text" class="link-url w-full p-2 rounded bg-gray-700 text-sm" value="${escapeHtml(item.link || '')}" placeholder="Link URL (optional)">
+                            <button class="delete-item bg-red-600 text-xs px-3 py-1 rounded"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                const addBtn = document.createElement('button');
+                addBtn.className = 'mt-3 bg-emerald-600 text-sm px-4 py-2 rounded-lg w-full md:w-auto';
+                addBtn.innerHTML = '<i class="fas fa-plus"></i> Add New Slide';
+                addBtn.onclick = () => {
+                    mainCarouselList.push({ image: 'https://via.placeholder.com/1200x400?text=New+Slide', link: '' });
+                    refreshEditor();
+                    saveCarouselToFirebase();
                 };
-            });
-            renderAdminSettingsTab();
+                container.appendChild(addBtn);
+                
+                // Attach zoom and delete events
+                container.querySelectorAll('.zoom-in').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const img = btn.closest('.image-preview-container').querySelector('.preview-img');
+                        let scale = parseFloat(img.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                        scale = Math.min(scale + 0.2, 3);
+                        img.style.transform = `scale(${scale})`;
+                    });
+                });
+                container.querySelectorAll('.zoom-out').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const img = btn.closest('.image-preview-container').querySelector('.preview-img');
+                        let scale = parseFloat(img.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                        scale = Math.max(scale - 0.2, 0.5);
+                        img.style.transform = `scale(${scale})`;
+                    });
+                });
+                container.querySelectorAll('.image-url').forEach((input, i) => {
+                    input.addEventListener('change', () => {
+                        mainCarouselList[i].image = input.value;
+                        saveCarouselToFirebase();
+                    });
+                });
+                container.querySelectorAll('.link-url').forEach((input, i) => {
+                    input.addEventListener('change', () => {
+                        mainCarouselList[i].link = input.value;
+                        saveCarouselToFirebase();
+                    });
+                });
+                container.querySelectorAll('.delete-item').forEach((btn, i) => {
+                    btn.addEventListener('click', () => {
+                        mainCarouselList.splice(i, 1);
+                        refreshEditor();
+                        saveCarouselToFirebase();
+                    });
+                });
+            }
+            function saveCarouselToFirebase() {
+                updateDoc(doc(db, "settings", "siteConfig"), { mainCarousel: JSON.stringify(mainCarouselList) }).catch(console.error);
+                const msg = document.getElementById('carouselSaveMsg');
+                if(msg) { msg.innerText = "✅ Carousel saved!"; setTimeout(()=>msg.innerText="",2000); }
+            }
+            refreshEditor();
+            // Make sortable
+            if (window.sortable) {
+                window.sortable(container, { items: '.image-editor-item', handle: '.sortable-handle', onDrop: () => {
+                    const newItems = [];
+                    container.querySelectorAll('.image-editor-item').forEach(el => {
+                        const imgUrl = el.querySelector('.image-url').value;
+                        const linkUrl = el.querySelector('.link-url').value;
+                        newItems.push({ image: imgUrl, link: linkUrl });
+                    });
+                    mainCarouselList = newItems;
+                    saveCarouselToFirebase();
+                }});
+            }
+            return container;
         }
 
-        async function renderAdminSettingsTab() {
+        async function renderFullSettingsTab() {
             const container = document.getElementById('adminTabContent');
-            container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 rounded"></div><div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 rounded"></div><div><label>Logo URL</label><input id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Footer Text</label><input id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Title (el)</label><input id="heroTitle" value="${escapeHtml(siteSettings.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Title (en)</label><input id="heroTitle_en" value="${escapeHtml(siteSettings.heroTitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Subtitle (el)</label><input id="heroSubtitle" value="${escapeHtml(siteSettings.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Hero Subtitle (en)</label><input id="heroSubtitle_en" value="${escapeHtml(siteSettings.heroSubtitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Main Carousel JSON</label><textarea id="mainCarousel" rows="4" class="w-full p-2 rounded bg-gray-800 font-mono">${JSON.stringify(mainCarouselList)}</textarea></div></div><button id="saveSettingsBtn" class="mt-4 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save Settings</button><div id="settingsMsg" class="mt-2 text-green-400"></div>`;
-            document.getElementById('saveSettingsBtn').onclick = async () => {
-                let carousel;
-                try { carousel = JSON.parse(document.getElementById('mainCarousel').value); } catch(e) { carousel = mainCarouselList; }
+            container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div>
+                <div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 h-10 rounded"></div>
+                <div><label>Logo URL</label><input type="text" id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Contact Email</label><input type="email" id="contactEmail" value="${escapeHtml(siteSettings.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Contact Phone</label><input type="text" id="contactPhone" value="${escapeHtml(siteSettings.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Contact Address</label><input type="text" id="contactAddress" value="${escapeHtml(siteSettings.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">🏠 Home Section</h3></div>
+                <div><label>Home Image URL</label><input type="text" id="homeImage" value="${escapeHtml(siteSettings.homeImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Home Link (optional)</label><input type="text" id="homeLink" value="${escapeHtml(siteSettings.homeLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Home Content (el)</label><textarea id="homeContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent)}</textarea></div>
+                <div class="col-span-2"><label>Home Content (en)</label><textarea id="homeContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">📘 Education Section</h3></div>
+                <div><label>Education Image URL</label><input type="text" id="educationImage" value="${escapeHtml(siteSettings.educationImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Education Link</label><input type="text" id="educationLink" value="${escapeHtml(siteSettings.educationLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Education Content (el)</label><textarea id="educationContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.educationContent)}</textarea></div>
+                <div class="col-span-2"><label>Education Content (en)</label><textarea id="educationContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.educationContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">🎓 Mentor Section</h3></div>
+                <div><label>Mentor Image URL</label><input type="text" id="mentorImage" value="${escapeHtml(siteSettings.mentorImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Mentor Link</label><input type="text" id="mentorLink" value="${escapeHtml(siteSettings.mentorLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Mentor Content (el)</label><textarea id="mentorContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.mentorContent)}</textarea></div>
+                <div class="col-span-2"><label>Mentor Content (en)</label><textarea id="mentorContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.mentorContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">👥 Community Section</h3></div>
+                <div><label>Community Image URL</label><input type="text" id="communityImage" value="${escapeHtml(siteSettings.communityImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Community Link</label><input type="text" id="communityLink" value="${escapeHtml(siteSettings.communityLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Community Content (el)</label><textarea id="communityContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.communityContent)}</textarea></div>
+                <div class="col-span-2"><label>Community Content (en)</label><textarea id="communityContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.communityContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">💰 Pricing Section</h3></div>
+                <div><label>Pricing Image URL</label><input type="text" id="pricingImage" value="${escapeHtml(siteSettings.pricingImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Pricing Link</label><input type="text" id="pricingLink" value="${escapeHtml(siteSettings.pricingLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Pricing Content (el)</label><textarea id="pricingContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.pricingContent)}</textarea></div>
+                <div class="col-span-2"><label>Pricing Content (en)</label><textarea id="pricingContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.pricingContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">Hero & Disclaimer</h3></div>
+                <div><label>Hero Title (el)</label><input type="text" id="heroTitle" value="${escapeHtml(siteSettings.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Title (en)</label><input type="text" id="heroTitle_en" value="${escapeHtml(siteSettings.heroTitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Subtitle (el)</label><input type="text" id="heroSubtitle" value="${escapeHtml(siteSettings.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Hero Subtitle (en)</label><input type="text" id="heroSubtitle_en" value="${escapeHtml(siteSettings.heroSubtitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Disclaimer (el)</label><textarea id="disclaimerText" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div>
+                <div><label>Disclaimer (en)</label><textarea id="disclaimerText_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div>
+            </div><div id="carouselEditorContainer" class="mt-6"></div><div id="carouselSaveMsg" class="text-green-400 text-sm mt-2"></div><button id="saveAllBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save Other Settings</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
+            
+            const carouselContainer = document.getElementById('carouselEditorContainer');
+            carouselContainer.appendChild(renderCarouselEditor());
+            
+            document.getElementById('saveAllBtn').onclick = async () => {
                 const updated = {
                     primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value,
                     logoUrl: document.getElementById('logoUrl').value, footerText: document.getElementById('footerText').value,
+                    contactEmail: document.getElementById('contactEmail').value, contactPhone: document.getElementById('contactPhone').value, contactAddress: document.getElementById('contactAddress').value,
+                    homeImage: document.getElementById('homeImage').value, homeLink: document.getElementById('homeLink').value, homeContent: document.getElementById('homeContent').value, homeContent_en: document.getElementById('homeContent_en').value,
+                    educationImage: document.getElementById('educationImage').value, educationLink: document.getElementById('educationLink').value, educationContent: document.getElementById('educationContent').value, educationContent_en: document.getElementById('educationContent_en').value,
+                    mentorImage: document.getElementById('mentorImage').value, mentorLink: document.getElementById('mentorLink').value, mentorContent: document.getElementById('mentorContent').value, mentorContent_en: document.getElementById('mentorContent_en').value,
+                    communityImage: document.getElementById('communityImage').value, communityLink: document.getElementById('communityLink').value, communityContent: document.getElementById('communityContent').value, communityContent_en: document.getElementById('communityContent_en').value,
+                    pricingImage: document.getElementById('pricingImage').value, pricingLink: document.getElementById('pricingLink').value, pricingContent: document.getElementById('pricingContent').value, pricingContent_en: document.getElementById('pricingContent_en').value,
                     heroTitle: document.getElementById('heroTitle').value, heroTitle_en: document.getElementById('heroTitle_en').value,
                     heroSubtitle: document.getElementById('heroSubtitle').value, heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
-                    mainCarousel: JSON.stringify(carousel)
+                    disclaimerText: document.getElementById('disclaimerText').value, disclaimerText_en: document.getElementById('disclaimerText_en').value,
+                    mainCarousel: JSON.stringify(mainCarouselList)
                 };
                 await updateDoc(doc(db, "settings", "siteConfig"), updated);
-                document.getElementById('settingsMsg').innerText = "✅ Saved!";
-                setTimeout(()=>document.getElementById('settingsMsg').innerText="",2000);
+                const msgDiv = document.getElementById('settingsMsg');
+                msgDiv.innerText = "✅ All settings saved!";
+                setTimeout(()=>msgDiv.innerText="",3000);
             };
         }
-
-        async function renderAdminPackagesTab() {
-            const container = document.getElementById('adminTabContent');
-            const pkgHtml = packagesList.map(p => `<div class="border-b py-3"><div class="flex justify-between"><div><strong>${escapeHtml(p.name)}</strong> / ${escapeHtml(p.name_en||'')}<br><span class="text-xs">${escapeHtml(p.price)}</span></div><div><button onclick="window.editPackageAdmin('${p.id}')" class="bg-blue-600 px-2 py-1 rounded text-sm">Edit</button> <button onclick="window.deletePackageAdmin('${p.id}')" class="bg-red-600 px-2 py-1 rounded text-sm">Del</button></div></div></div>`).join('');
-            container.innerHTML = `<h3 class="text-xl font-bold mb-3">Packages</h3><button id="newPkgBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New Package</button><div>${pkgHtml||'None'}</div>`;
-            document.getElementById('newPkgBtn').onclick = () => showPackageAdminForm();
-            window.editPackageAdmin = (id) => showPackageAdminForm(packagesList.find(p=>p.id===id));
-            window.deletePackageAdmin = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"packages",id)); renderAdminPackagesTab(); };
-        }
-
-        async function showPackageAdminForm(existing=null) {
-            const material = existing?.material || { content: '', links: [], videos: [] };
-            const modalDiv = document.createElement('div');
-            modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4 overflow-auto";
-            modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-auto"><h3 class="text-xl font-bold mb-3">${existing?'Edit':'New'} Package</h3>
-                <div class="grid grid-cols-2 gap-3"><div><label>Name (el)</label><input id="pkgName" value="${existing?escapeHtml(existing.name):''}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>Name (en)</label><input id="pkgName_en" value="${existing?escapeHtml(existing.name_en||''):''}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>Price</label><input id="pkgPrice" value="${existing?escapeHtml(existing.price):''}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>Image URL</label><input id="pkgImage" value="${existing?escapeHtml(existing.imageUrl||''):''}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="col-span-2"><label>Description (el)</label><textarea id="pkgDesc" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description||''):''}</textarea></div>
-                <div class="col-span-2"><label>Description (en)</label><textarea id="pkgDesc_en" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description_en||''):''}</textarea></div>
-                <div class="col-span-2"><label>Features (el) - comma</label><input id="pkgFeatures" value="${existing&&existing.features?existing.features.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="col-span-2"><label>Features (en) - comma</label><input id="pkgFeatures_en" value="${existing&&existing.features_en?existing.features_en.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div class="col-span-2"><hr class="border-gray-600 my-2"><h4 class="font-bold">📦 EXCLUSIVE MATERIAL (for approved users)</h4></div>
-                <div class="col-span-2"><label>Material Content (HTML allowed)</label><textarea id="materialContent" rows="4" class="w-full p-2 rounded bg-gray-800 font-mono">${escapeHtml(material.content||'')}</textarea></div>
-                <div class="col-span-2"><label>Material Links (JSON: [{"title":"...","url":"..."}])</label><textarea id="materialLinks" rows="3" class="w-full p-2 rounded bg-gray-800 font-mono">${JSON.stringify(material.links||[])}</textarea></div>
-                <div class="col-span-2"><label>Material Videos (JSON: [{"title":"...","url":"...","embedCode":"..."}])</label><textarea id="materialVideos" rows="3" class="w-full p-2 rounded bg-gray-800 font-mono">${JSON.stringify(material.videos||[])}</textarea></div>
-                </div><div class="flex gap-3 mt-4"><button id="savePkgBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelPkgBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`;
-            document.body.appendChild(modalDiv);
-            modalDiv.querySelector('#savePkgBtn').onclick = async () => {
-                const name = document.getElementById('pkgName').value.trim();
-                if(!name) return;
-                let links, videos;
-                try { links = JSON.parse(document.getElementById('materialLinks').value); } catch(e){ links = []; }
-                try { videos = JSON.parse(document.getElementById('materialVideos').value); } catch(e){ videos = []; }
-                const data = {
-                    name, name_en: document.getElementById('pkgName_en').value.trim(),
-                    price: document.getElementById('pkgPrice').value,
-                    description: document.getElementById('pkgDesc').value,
-                    description_en: document.getElementById('pkgDesc_en').value,
-                    imageUrl: document.getElementById('pkgImage').value,
-                    features: document.getElementById('pkgFeatures').value.split(',').map(f=>f.trim()),
-                    features_en: document.getElementById('pkgFeatures_en').value.split(',').map(f=>f.trim()),
-                    material: { content: document.getElementById('materialContent').value, links, videos },
-                    order: existing?existing.order:Date.now()
-                };
-                if(existing) await updateDoc(doc(db,"packages",existing.id), data);
-                else await addDoc(collection(db,"packages"), data);
-                modalDiv.remove();
-                renderAdminPackagesTab();
-            };
-            modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove();
-        }
-
-        async function renderAdminSubscriptionsTab() {
-            const container = document.getElementById('adminTabContent');
-            const subsSnap = await getDocs(query(collection(db, "subscriptions"), orderBy("requestedAt", "desc")));
-            let html = `<h3 class="text-xl font-bold mb-4">📋 Subscription Requests (Approve after payment)</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Email</th><th>Package</th><th>Status</th><th>Requested</th><th>Actions</th></tr></thead><tbody>`;
-            subsSnap.forEach(doc => {
-                const s = doc.data();
-                html += `<tr class="border-b"><td class="py-2">${escapeHtml(s.userEmail)}</td><td>${escapeHtml(s.packageName)}</td><td><span class="px-2 py-0.5 rounded-full text-xs ${s.status === 'approved' ? 'bg-green-600' : 'bg-yellow-600'}">${s.status}</span></td><td class="text-xs">${new Date(s.requestedAt).toLocaleDateString()}</td><td>${s.status !== 'approved' ? `<button class="approve-sub bg-green-600 px-2 py-1 rounded text-xs" data-id="${doc.id}">✅ Approve</button>` : ''} <button class="delete-sub bg-red-600 px-2 py-1 rounded text-xs" data-id="${doc.id}">🗑 Delete</button></td></tr>`;
-            });
-            html += `</tbody></table></div>`;
-            container.innerHTML = html;
-            document.querySelectorAll('.approve-sub').forEach(btn => btn.onclick = async () => {
-                await updateDoc(doc(db, "subscriptions", btn.dataset.id), { status: "approved", approvedAt: new Date().toISOString() });
-                renderAdminSubscriptionsTab();
-            });
-            document.querySelectorAll('.delete-sub').forEach(btn => btn.onclick = async () => {
-                if(confirm("Delete subscription?")) await deleteDoc(doc(db, "subscriptions", btn.dataset.id));
-                renderAdminSubscriptionsTab();
-            });
-        }
-
-        async function renderAdminLeadsTab() {
-            const leads = await getDocs(query(collection(db,"leads"), orderBy("timestamp","desc")));
-            let html = `<h3 class="text-xl font-bold mb-4">Leads</h3><table class="w-full text-sm"><thead><tr><th>Name</th><th>Email</th><th>Package</th><th>Date</th></tr></thead><tbody>`;
-            leads.forEach(d => { const data=d.data(); html+=`<tr><td class="py-2">${escapeHtml(data.name)}</td><td>${escapeHtml(data.email)}</td><td>${escapeHtml(data.packageName)}</td><td class="text-xs">${new Date(data.timestamp).toLocaleString()}</td></tr>`; });
-            html+=`</tbody></table><button id="clearLeadsBtn" class="mt-4 bg-red-600 px-3 py-1 rounded text-sm">Clear All Leads</button>`;
-            document.getElementById('adminTabContent').innerHTML=html;
-            document.getElementById('clearLeadsBtn')?.addEventListener('click', async () => { if(confirm("Delete ALL leads?")) { const all = await getDocs(collection(db,"leads")); all.forEach(d => deleteDoc(doc(db,"leads",d.id))); renderAdminLeadsTab(); } });
-        }
-        async function renderAdminAnnouncementsTab() {
-            const annHtml = announcementsList.map(a => `<div class="border-b py-2"><strong>${escapeHtml(a.title)}</strong> / ${escapeHtml(a.title_en||'')} - ${a.active!==false?'Active':'Inactive'} <button onclick="window.editAnnouncementAdmin('${a.id}')" class="bg-blue-600 px-2 rounded text-sm">Edit</button> <button onclick="window.deleteAnnouncementAdmin('${a.id}')" class="bg-red-600 px-2 rounded text-sm">Del</button></div>`).join('');
-            document.getElementById('adminTabContent').innerHTML = `<h3 class="text-xl font-bold">Announcements</h3><button id="newAnnBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${annHtml||'None'}</div>`;
-            document.getElementById('newAnnBtn').onclick = () => showAnnouncementAdminForm();
-            window.editAnnouncementAdmin = (id) => showAnnouncementAdminForm(announcementsList.find(a=>a.id===id));
-            window.deleteAnnouncementAdmin = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"announcements",id)); renderAdminAnnouncementsTab(); };
-        }
-        async function showAnnouncementAdminForm(existing=null) {
-            const modalDiv = document.createElement('div');
-            modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4";
-            modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-lg"><h3>${existing?'Edit':'New'} Announcement</h3><div><label>Title (el)</label><input id="annTitle" value="${existing?escapeHtml(existing.title):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label>Title (en)</label><input id="annTitle_en" value="${existing?escapeHtml(existing.title_en||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label>Content (el)</label><textarea id="annContent" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content):''}</textarea></div><div><label>Content (en)</label><textarea id="annContent_en" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content_en||''):''}</textarea></div><div><label>Link</label><input id="annLink" value="${existing?escapeHtml(existing.link||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"></div><div><label><input type="checkbox" id="annActive" ${existing&&existing.active===false?'':'checked'}> Active</label></div><div class="flex gap-3 mt-4"><button id="saveAnnBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelAnnBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`;
-            document.body.appendChild(modalDiv);
-            modalDiv.querySelector('#saveAnnBtn').onclick = async () => {
-                const data = { title: document.getElementById('annTitle').value, title_en: document.getElementById('annTitle_en').value, content: document.getElementById('annContent').value, content_en: document.getElementById('annContent_en').value, link: document.getElementById('annLink').value, active: document.getElementById('annActive').checked, updatedAt: new Date().toISOString(), createdAt: existing?existing.createdAt:new Date().toISOString() };
-                if(existing) await updateDoc(doc(db,"announcements",existing.id), data);
-                else await addDoc(collection(db,"announcements"), data);
-                modalDiv.remove();
-                renderAdminAnnouncementsTab();
-            };
-            modalDiv.querySelector('#cancelAnnBtn').onclick = () => modalDiv.remove();
-        }
-        async function renderAdminContactsTab() {
-            const msgs = await getDocs(query(collection(db,"contactMessages"), orderBy("timestamp","desc")));
-            let html = `<h3 class="text-xl font-bold">Contact Messages</h3>`;
-            msgs.forEach(d => { const m=d.data(); html+=`<div class="glass-card p-3 mb-2 rounded"><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.email)})<br>${escapeHtml(m.message)}<br><button class="delete-msg bg-red-600 text-sm px-2 py-1 rounded mt-1" data-id="${d.id}">Delete</button></div>`; });
-            document.getElementById('adminTabContent').innerHTML = html;
-            document.querySelectorAll('.delete-msg').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"contactMessages",b.dataset.id)); renderAdminContactsTab(); });
-        }
+        
+        async function renderPackagesTab() { const container = document.getElementById('adminTabContent'); const pkgHtml = packagesList.map(p => `<div class="flex justify-between items-center border-b py-2"><div><strong>${escapeHtml(p.name)}</strong> / ${escapeHtml(p.name_en||'')}<br><span class="text-xs">${escapeHtml(p.price)}</span></div><div><button onclick="window.editPackage('${p.id}')" class="bg-blue-600 px-2 py-1 rounded text-sm">Edit</button> <button onclick="window.deletePackageItem('${p.id}')" class="bg-red-600 px-2 py-1 rounded text-sm">Del</button></div></div>`).join(''); container.innerHTML = `<h3 class="text-xl font-bold">Packages</h3><button id="newPackageBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${pkgHtml||'None'}</div>`; document.getElementById('newPackageBtn').onclick = () => showPackageForm(); window.editPackage = (id) => showPackageForm(packagesList.find(p=>p.id===id)); window.deletePackageItem = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"packages",id)); }; }
+        async function showPackageForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-2xl"><h3 class="text-xl font-bold">${existing?'Edit':'New'} Package</h3><div class="grid grid-cols-2 gap-3 mt-3"><div><label>Name (el)</label><input id="pkgName" value="${existing?escapeHtml(existing.name):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Name (en)</label><input id="pkgName_en" value="${existing?escapeHtml(existing.name_en||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Price</label><input id="pkgPrice" value="${existing?escapeHtml(existing.price):''}" class="w-full p-2 rounded bg-gray-800"></div><div><label>Image URL</label><input id="pkgImage" value="${existing?escapeHtml(existing.imageUrl||''):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Description (el)</label><textarea id="pkgDesc" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description||''):''}</textarea></div><div class="col-span-2"><label>Description (en)</label><textarea id="pkgDesc_en" rows="2" class="w-full p-2 rounded bg-gray-800">${existing?escapeHtml(existing.description_en||''):''}</textarea></div><div class="col-span-2"><label>Features (el) - comma</label><input id="pkgFeatures" value="${existing&&existing.features?existing.features.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div><div class="col-span-2"><label>Features (en) - comma</label><input id="pkgFeatures_en" value="${existing&&existing.features_en?existing.features_en.join(','):''}" class="w-full p-2 rounded bg-gray-800"></div></div><div class="flex gap-3 mt-4"><button id="savePkgBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelPkgBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`; document.body.appendChild(modalDiv); modalDiv.querySelector('#savePkgBtn').onclick = async () => { const name = document.getElementById('pkgName').value.trim(); if(!name) return; const data = { name, name_en: document.getElementById('pkgName_en').value.trim(), price: document.getElementById('pkgPrice').value, description: document.getElementById('pkgDesc').value, description_en: document.getElementById('pkgDesc_en').value, imageUrl: document.getElementById('pkgImage').value, features: document.getElementById('pkgFeatures').value.split(',').map(f=>f.trim()), features_en: document.getElementById('pkgFeatures_en').value.split(',').map(f=>f.trim()), order: existing?existing.order:Date.now() }; if(existing) await updateDoc(doc(db,"packages",existing.id), data); else await addDoc(collection(db,"packages"), data); modalDiv.remove(); }; modalDiv.querySelector('#cancelPkgBtn').onclick = () => modalDiv.remove(); }
+        async function renderLeadsTab() { const leadsSnap = await getDocs(query(collection(db,"leads"), orderBy("timestamp","desc"))); let html = `<h3 class="text-xl font-bold">Leads</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Date</th><th></th><tr></thead><tbody>`; leadsSnap.forEach(d=>{ const data=d.data(); html+=`<tr><td class="py-2">${escapeHtml(data.name)}</td><td>${escapeHtml(data.email)}</td><td>${escapeHtml(data.packageName)}</td><td><button class="status-btn" data-id="${d.id}" data-status="✅">✅</button><button class="status-btn" data-id="${d.id}" data-status="❌">❌</button><button class="status-btn" data-id="${d.id}" data-status="❔">❔</button> ${data.status||'❔'}</td><td class="text-xs">${new Date(data.timestamp).toLocaleString()}</td><td><button class="delete-lead text-red-400" data-id="${d.id}"><i class="fas fa-trash"></i></button></td></tr>`; }); html+=`</tbody>}</div>`; document.getElementById('adminTabContent').innerHTML=html; document.querySelectorAll('.status-btn').forEach(b=>b.onclick=async()=>{ await updateDoc(doc(db,"leads",b.dataset.id),{status:b.dataset.status}); renderLeadsTab(); }); document.querySelectorAll('.delete-lead').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"leads",b.dataset.id)); renderLeadsTab(); }); }
+        async function renderAnnouncementsTab() { const annHtml = announcementsList.map(a=>`<div class="border-b py-2"><strong>${escapeHtml(a.title)}</strong> / ${escapeHtml(a.title_en||'')} - ${a.active!==false?'Active':'Inactive'} <button onclick="window.editAnnouncement('${a.id}')" class="ml-2 bg-blue-600 px-2 rounded text-sm">Edit</button> <button onclick="window.deleteAnnouncementItem('${a.id}')" class="bg-red-600 px-2 rounded text-sm">Del</button></div>`).join(''); document.getElementById('adminTabContent').innerHTML=`<h3 class="text-xl font-bold">Announcements</h3><button id="newAnnBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${annHtml||'None'}</div>`; document.getElementById('newAnnBtn').onclick=()=>showAnnouncementForm(); window.editAnnouncement=(id)=>showAnnouncementForm(announcementsList.find(a=>a.id===id)); window.deleteAnnouncementItem=async(id)=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"announcements",id)); renderAnnouncementsTab(); }; }
+        async function showAnnouncementForm(existing=null) { const modalDiv = document.createElement('div'); modalDiv.innerHTML = `<div class="glass-card bg-gray-900 p-6 rounded-2xl w-full max-w-lg"><h3 class="text-xl font-bold">${existing?'Edit':'New'} Announcement</h3><div class="mt-3"><label>Title (el)</label><input id="annTitle" value="${existing?escapeHtml(existing.title):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><label>Title (en)</label><input id="annTitle_en" value="${existing?escapeHtml(existing.title_en||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><label>Content (el)</label><textarea id="annContent" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content):''}</textarea><label>Content (en)</label><textarea id="annContent_en" rows="3" class="w-full p-2 mb-2 rounded bg-gray-800">${existing?escapeHtml(existing.content_en||''):''}</textarea><label>Link</label><input id="annLink" value="${existing?escapeHtml(existing.link||''):''}" class="w-full p-2 mb-2 rounded bg-gray-800"><label><input type="checkbox" id="annActive" ${existing&&existing.active===false?'':'checked'}> Active</label></div><div class="flex gap-3 mt-4"><button id="saveAnnBtn" class="bg-amber-500 py-2 px-4 rounded">Save</button><button id="cancelAnnBtn" class="bg-gray-600 py-2 px-4 rounded">Cancel</button></div></div>`; modalDiv.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"; document.body.appendChild(modalDiv); modalDiv.querySelector('#saveAnnBtn').onclick = async () => { const data = { title: document.getElementById('annTitle').value, title_en: document.getElementById('annTitle_en').value, content: document.getElementById('annContent').value, content_en: document.getElementById('annContent_en').value, link: document.getElementById('annLink').value, active: document.getElementById('annActive').checked, updatedAt: new Date().toISOString(), createdAt: existing?existing.createdAt:new Date().toISOString() }; if(existing) await updateDoc(doc(db,"announcements",existing.id), data); else await addDoc(collection(db,"announcements"), data); modalDiv.remove(); renderAnnouncementsTab(); }; modalDiv.querySelector('#cancelAnnBtn').onclick = () => modalDiv.remove(); }
+        async function renderContactMessagesTab() { const msgs = await getDocs(query(collection(db,"contactMessages"), orderBy("timestamp","desc"))); let html = `<h3 class="text-xl font-bold">Contact Messages</h3>`; msgs.forEach(d=>{ const m=d.data(); html+=`<div class="glass-card p-3 mb-2 rounded"><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.email)})<br>${escapeHtml(m.message)}<br><button class="delete-msg bg-red-600 text-sm px-2 py-1 rounded mt-1" data-id="${d.id}">Delete</button></div>`; }); document.getElementById('adminTabContent').innerHTML=html; document.querySelectorAll('.delete-msg').forEach(b=>b.onclick=async()=>{ if(confirm("Delete?")) await deleteDoc(doc(db,"contactMessages",b.dataset.id)); renderContactMessagesTab(); }); }
 
         function renderCurrentView() {
             const root = document.getElementById('root');
@@ -514,30 +604,9 @@
                 document.getElementById('openAdminWindowBtn')?.addEventListener('click', () => { const url = new URL(window.location.href); url.searchParams.set('admin','true'); window.open(url.toString(), '_blank', 'width=1300,height=900'); });
                 document.getElementById('langEl')?.addEventListener('click', () => { currentLanguage = 'el'; renderCurrentView(); });
                 document.getElementById('langEn')?.addEventListener('click', () => { currentLanguage = 'en'; renderCurrentView(); });
-                document.getElementById('showAuthModalBtn')?.addEventListener('click', () => document.getElementById('authModal').classList.remove('hidden'));
-                document.getElementById('authLoginBtn')?.addEventListener('click', async () => {
-                    const email = document.getElementById('authEmail').value, pwd = document.getElementById('authPassword').value;
-                    try { await signInWithEmailAndPassword(auth, email, pwd); document.getElementById('authModal').classList.add('hidden'); await loadUserSubscription(); if(currentPage === 'material') renderCurrentView(); } 
-                    catch(e) { document.getElementById('authMsg').innerText = e.message; }
-                });
-                document.getElementById('authRegisterBtn')?.addEventListener('click', async () => {
-                    const email = document.getElementById('authEmail').value, pwd = document.getElementById('authPassword').value;
-                    try { await createUserWithEmailAndPassword(auth, email, pwd); document.getElementById('authModal').classList.add('hidden'); await loadUserSubscription(); if(currentPage === 'material') renderCurrentView(); }
-                    catch(e) { document.getElementById('authMsg').innerText = e.message; }
-                });
-                document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); currentUser = null; userSubscription = null; setPage('home'); });
                 const contactForm = document.getElementById('contactForm');
-                if(contactForm) contactForm.onsubmit = async (e) => { e.preventDefault(); const name = document.getElementById('contactName').value, email = document.getElementById('contactEmailInput').value, msg = document.getElementById('contactMessage').value; if(!name||!email||!msg) return; try { await addDoc(collection(db,"contactMessages"),{name,email,message:msg,timestamp:new Date().toISOString()}); document.getElementById('contactFormMsg').innerText = "✅ Sent!"; contactForm.reset(); setTimeout(()=>document.getElementById('contactFormMsg').innerText="",3000); } catch(e){ alert("Error"); } };
-                if (currentPage === 'home') setTimeout(() => initMainCarousel(), 100);
-                // Material page login
-                document.getElementById('matLoginBtn')?.addEventListener('click', async () => {
-                    const email = document.getElementById('matEmail').value, pwd = document.getElementById('matPassword').value;
-                    try { await signInWithEmailAndPassword(auth, email, pwd); await loadUserSubscription(); renderCurrentView(); } catch(e){ document.getElementById('matMsg').innerText = e.message; }
-                });
-                document.getElementById('matRegisterBtn')?.addEventListener('click', async () => {
-                    const email = document.getElementById('matEmail').value, pwd = document.getElementById('matPassword').value;
-                    try { await createUserWithEmailAndPassword(auth, email, pwd); await loadUserSubscription(); renderCurrentView(); } catch(e){ document.getElementById('matMsg').innerText = e.message; }
-                });
+                if(contactForm) contactForm.onsubmit = async (e) => { e.preventDefault(); const name = document.getElementById('contactName').value.trim(), email = document.getElementById('contactEmailInput').value.trim(), message = document.getElementById('contactMessage').value.trim(); if(!name||!email||!message) return alert("Fill all fields"); try { await addDoc(collection(db,"contactMessages"),{name,email,message,timestamp:new Date().toISOString()}); document.getElementById('contactFormMsg').innerText = "✅ Sent!"; contactForm.reset(); setTimeout(()=>document.getElementById('contactFormMsg').innerText="",3000); } catch(e){ alert("Error"); } };
+                if (currentPage === 'home') { setTimeout(() => initMainCarousel(), 100); }
             } else {
                 if (mainCarouselInterval) clearInterval(mainCarouselInterval);
                 root.innerHTML = renderAdminView();
@@ -545,37 +614,14 @@
                 else { attachAdminAuthEvents(); }
             }
         }
-        function attachAdminAuthEvents() {
-            document.getElementById('adminLoginBtn')?.addEventListener('click', async () => {
-                const email = document.getElementById('adminEmail').value, pwd = document.getElementById('adminPassword').value;
-                try { const cred = await signInWithEmailAndPassword(auth, email, pwd); if(await checkAdminAuthorization(cred.user)) { adminAuthorized=true; renderCurrentView(); } else document.getElementById('adminAuthMsg').innerText="Not admin."; } 
-                catch(e){ document.getElementById('adminAuthMsg').innerText=e.message; }
-            });
-            document.getElementById('adminRegisterBtn')?.addEventListener('click', async () => {
-                const email = document.getElementById('adminEmail').value, pwd = document.getElementById('adminPassword').value;
-                if(!email||!pwd) return;
-                try { const userCred = await createUserWithEmailAndPassword(auth, email, pwd); const adminDocRef = doc(db,"admin","adminData"); const snap = await getDoc(adminDocRef); if(!snap.exists()) { await setDoc(adminDocRef, { adminUid: userCred.user.uid }); adminAuthorized=true; renderCurrentView(); } else alert("Admin already exists."); } 
-                catch(e){ alert(e.message); }
-            });
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            currentUser = user;
-            if (user) await loadUserSubscription();
-            else userSubscription = null;
-            if (currentMode !== 'admin') renderCurrentView();
-        });
+        function attachAdminAuthEvents() { document.getElementById('adminLoginBtn')?.addEventListener('click', async () => { const email = document.getElementById('adminEmail').value, pwd = document.getElementById('adminPassword').value; try { const cred = await signInWithEmailAndPassword(auth, email, pwd); if(await checkAdminAuthorization(cred.user)) { adminAuthorized=true; renderCurrentView(); } else document.getElementById('adminAuthMsg').innerText="Not admin."; } catch(e){ document.getElementById('adminAuthMsg').innerText=e.message; } }); document.getElementById('adminRegisterBtn')?.addEventListener('click', async () => { const email = document.getElementById('adminEmail').value, pwd = document.getElementById('adminPassword').value; if(!email||!pwd) return; try { const userCred = await createUserWithEmailAndPassword(auth, email, pwd); const adminDocRef = doc(db,"admin","adminData"); const snap = await getDoc(adminDocRef); if(!snap.exists()) { await setDoc(adminDocRef, { adminUid: userCred.user.uid }); adminAuthorized=true; renderCurrentView(); } else alert("Admin already exists."); } catch(e){ alert(e.message); } }); }
 
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             currentMode = urlParams.get('admin') === 'true' ? 'admin' : 'user';
             await initRealtimeSync();
-            if (currentMode === 'admin') {
-                onAuthStateChanged(auth, async (user) => { if (user) adminAuthorized = await checkAdminAuthorization(user); else adminAuthorized = false; renderCurrentView(); });
-            } else {
-                currentPage = getPageFromHash();
-                renderCurrentView();
-            }
+            if (currentMode === 'admin') onAuthStateChanged(auth, async (user) => { if (user) adminAuthorized = await checkAdminAuthorization(user); else adminAuthorized = false; renderCurrentView(); });
+            else { currentPage = getPageFromHash(); renderCurrentView(); }
             setTimeout(() => { const ld = document.getElementById('loadingScreen'); if(ld) { ld.classList.add('fade-out'); setTimeout(()=>{if(ld&&ld.parentNode) ld.style.display='none';},800); } }, 3000);
         }
         init();
