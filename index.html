@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- HTML5 Sortable library for drag & drop -->
     <script src="https://cdn.jsdelivr.net/npm/html5-sortable@0.11.0/dist/html5-sortable.min.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
@@ -74,7 +73,6 @@
         @media (max-width: 768px) { .carousel-slide img { height: 250px; } .small-carousel-slide img { height: 120px; } }
         .disclaimer-card { background: rgba(0,0,0,0.6); border-left: 4px solid #f7931a; font-size: 0.8rem; }
         .links-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1.5rem; }
-        /* Admin image editor styles */
         .image-editor-item { transition: all 0.2s; cursor: grab; }
         .image-editor-item:active { cursor: grabbing; }
         .image-preview-container { position: relative; display: inline-block; }
@@ -84,6 +82,7 @@
         .preview-img { transition: transform 0.2s ease; transform-origin: center center; }
         .sortable-handle { cursor: grab; padding: 4px; }
         .sortable-handle:active { cursor: grabbing; }
+        .section-card-image { width: 100%; max-height: 200px; object-fit: cover; border-radius: 1rem; margin-bottom: 1rem; }
     </style>
 </head>
 <body class="text-gray-200">
@@ -128,6 +127,7 @@
         };
         function t(key) { return translations[currentLanguage][key] || key; }
 
+        // Extended site settings with image+link for each section
         let siteSettings = {
             primaryColor: '#f7931a',
             backgroundColor: '#0a0a1f',
@@ -137,21 +137,47 @@
             heroTitle: 'Master Crypto & Financial Markets',
             heroSubtitle: 'Learn to trade like a legend with expert-led courses and real market insights.',
             heroImageUrl: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=2070&auto=format',
+            // Home section
             homeContent: 'Καλώς ήρθατε στο TradeLegends! Ανακαλύψτε τον κόσμο των κρύπτο και των χρηματοοικονομικών αγορών με κορυφαίους mentors και μία ενεργή κοινότητα.',
-            educationContent: 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα των κρύπτο και των χρηματοοικονομικών αγορών.',
-            mentorContent: 'Η ομάδα μας αποτελείται από επαγγελματίες traders με χρόνια εμπειρίας.',
-            communityContent: 'Γίνετε μέλος σε μια αποκλειστική κοινότητα φιλόδοξων επενδυτών.',
-            pricingContent: 'Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας.',
+            homeImage: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            homeLink: '',
+            // Education section
+            educationContent: 'Ανακαλύψτε τα βασικά και προχωρημένα θέματα των κρύπτο και των χρηματοοικονομικών αγορών. Μαθήματα βίντεο, διαδραστικά quizzes και πραγματικές μελέτες περίπτωσης από ειδικούς.',
+            educationImage: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800',
+            educationLink: '',
+            // Mentor section
+            mentorContent: 'Η ομάδα μας αποτελείται από επαγγελματίες traders με χρόνια εμπειρίας. Προσωπική καθοδήγηση, live sessions και στρατηγικές που αποδίδουν.',
+            mentorImage: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
+            mentorLink: '',
+            // Community section
+            communityContent: 'Γίνετε μέλος σε μια αποκλειστική κοινότητα φιλόδοξων επενδυτών. Ανταλλάξτε ιδέες, συμμετέχετε σε webinars και λαμβάνετε καθημερινή υποστήριξη.',
+            communityImage: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800',
+            communityLink: '',
+            // Pricing section
+            pricingContent: 'Επιλέξτε το πρόγραμμα που ταιριάζει στους στόχους σας. Όλα τα πακέτα περιλαμβάνουν пожизненную πρόσβαση και υποστήριξη.',
+            pricingImage: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            pricingLink: '',
             contactEmail: 'support@tradelegends.com',
             contactPhone: '+30 210 1234567',
             contactAddress: 'Αθήνα, Ελλάδα',
+            // English versions
             heroTitle_en: 'Master Crypto & Financial Markets',
             heroSubtitle_en: 'Learn to trade like a legend with expert-led courses and real market insights.',
-            homeContent_en: 'Welcome to TradeLegends! Discover the world of crypto and financial markets.',
-            educationContent_en: 'Discover basic and advanced topics of crypto and financial markets.',
-            mentorContent_en: 'Our team consists of professional traders with years of experience.',
-            communityContent_en: 'Join an exclusive community of ambitious investors.',
-            pricingContent_en: 'Choose the program that fits your goals.',
+            homeContent_en: 'Welcome to TradeLegends! Discover the world of crypto and financial markets with top mentors and an active community.',
+            homeImage_en: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            homeLink_en: '',
+            educationContent_en: 'Discover basic and advanced topics of crypto and financial markets. Video lessons, interactive quizzes, and real case studies by experts.',
+            educationImage_en: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800',
+            educationLink_en: '',
+            mentorContent_en: 'Our team consists of professional traders with years of experience. Personal guidance, live sessions, and proven strategies.',
+            mentorImage_en: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
+            mentorLink_en: '',
+            communityContent_en: 'Join an exclusive community of ambitious investors. Exchange ideas, participate in webinars, and receive daily support.',
+            communityImage_en: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800',
+            communityLink_en: '',
+            pricingContent_en: 'Choose the program that fits your goals. All packages include lifetime access and support.',
+            pricingImage_en: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800',
+            pricingLink_en: '',
             carouselImages: '["https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200","https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=1200","https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200","https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200"]',
             linksCarousel: '[{"image":"https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600","url":"https://www.binance.com"},{"image":"https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=600","url":"https://www.coinbase.com"},{"image":"https://images.unsplash.com/photo-1605792657660-596af9009e82?w=600","url":"https://www.tradingview.com"},{"image":"https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600","url":"https://www.coingecko.com"}]',
             disclaimerText: '⚠️ ΠΡΟΣΟΧΗ: Οι επενδύσεις σε κρύπτο και χρηματοοικονομικά προϊόντα ενέχουν υψηλό κίνδυνο. Οι προηγούμενες αποδόσεις δεν εγγυώνται μελλοντικά αποτελέσματα. Το TradeLegends παρέχει αποκλειστικά εκπαιδευτικό περιεχόμενο και όχι επενδυτικές συμβουλές. Συμβουλευτείτε πάντα έναν εξειδικευμένο σύμβουλο πριν προβείτε σε επένδυση.',
@@ -164,32 +190,19 @@
 
         function parseCarouselImages() {
             try {
-                if (typeof siteSettings.carouselImages === 'string') {
-                    carouselImagesList = JSON.parse(siteSettings.carouselImages);
-                } else if (Array.isArray(siteSettings.carouselImages)) {
-                    carouselImagesList = siteSettings.carouselImages;
-                } else { carouselImagesList = []; }
+                if (typeof siteSettings.carouselImages === 'string') carouselImagesList = JSON.parse(siteSettings.carouselImages);
+                else if (Array.isArray(siteSettings.carouselImages)) carouselImagesList = siteSettings.carouselImages;
+                else carouselImagesList = [];
             } catch(e) { carouselImagesList = []; }
-            if (!carouselImagesList.length) {
-                carouselImagesList = ['https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200'];
-            }
+            if (!carouselImagesList.length) carouselImagesList = ['https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200'];
         }
         function parseLinksCarousel() {
             try {
-                if (typeof siteSettings.linksCarousel === 'string') {
-                    linksCarouselList = JSON.parse(siteSettings.linksCarousel);
-                } else if (Array.isArray(siteSettings.linksCarousel)) {
-                    linksCarouselList = siteSettings.linksCarousel;
-                } else { linksCarouselList = []; }
+                if (typeof siteSettings.linksCarousel === 'string') linksCarouselList = JSON.parse(siteSettings.linksCarousel);
+                else if (Array.isArray(siteSettings.linksCarousel)) linksCarouselList = siteSettings.linksCarousel;
+                else linksCarouselList = [];
             } catch(e) { linksCarouselList = []; }
-            if (!linksCarouselList.length) {
-                linksCarouselList = [
-                    {image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600', url: 'https://www.binance.com'},
-                    {image: 'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=600', url: 'https://www.coinbase.com'},
-                    {image: 'https://images.unsplash.com/photo-1605792657660-596af9009e82?w=600', url: 'https://www.tradingview.com'},
-                    {image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600', url: 'https://www.coingecko.com'}
-                ];
-            }
+            if (!linksCarouselList.length) linksCarouselList = [{image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600', url: 'https://www.binance.com'}];
         }
 
         function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
@@ -199,14 +212,13 @@
             document.body.style.backgroundColor = settings.backgroundColor;
             document.body.style.color = settings.textColor;
         }
-        function getLocalizedText(field) {
+        function getLocalizedField(field, isHtml = false) {
             let val = siteSettings[field];
             if (currentLanguage === 'en' && siteSettings[field + '_en']) val = siteSettings[field + '_en'];
-            return escapeHtml(val);
+            return isHtml ? val : escapeHtml(val);
         }
         function getDisclaimerText() {
-            if (currentLanguage === 'en' && siteSettings.disclaimerText_en) return escapeHtml(siteSettings.disclaimerText_en);
-            return escapeHtml(siteSettings.disclaimerText);
+            return currentLanguage === 'en' ? escapeHtml(siteSettings.disclaimerText_en) : escapeHtml(siteSettings.disclaimerText);
         }
 
         function initRealtimeSync() {
@@ -320,7 +332,16 @@
             goToLinksSlide(0);
         }
 
-        // ---------- USER PAGE RENDERING (unchanged but references carousels) ----------
+        // Helper to render a section card with image and optional link
+        function renderSectionCard(content, imageUrl, linkUrl, primaryColor) {
+            const imgHtml = imageUrl ? `<img src="${escapeHtml(imageUrl)}" class="section-card-image w-full h-48 object-cover rounded-xl mb-4" onerror="this.src='https://via.placeholder.com/800x200?text=Image'">` : '';
+            const contentHtml = `<p class="text-lg leading-relaxed">${content}</p>`;
+            if (linkUrl) {
+                return `<a href="${escapeHtml(linkUrl)}" target="_blank" rel="noopener noreferrer" class="block glass-card p-8 rounded-2xl transition hover:scale-[1.01]" style="background: rgba(0,0,0,0.3); border: 1px solid ${primaryColor}40;">${imgHtml}${contentHtml}</a>`;
+            }
+            return `<div class="glass-card p-8 rounded-2xl" style="background: rgba(0,0,0,0.3);">${imgHtml}${contentHtml}</div>`;
+        }
+
         function renderHomePage(primary) {
             const announcementsHtml = (() => {
                 const active = announcementsList.filter(a => a.active !== false);
@@ -331,54 +352,54 @@
                     if (currentLanguage === 'en' && ann.content_en) content = ann.content_en;
                     return `<div class="announcement-card glass-card p-5 rounded-xl" style="background: rgba(0,0,0,0.35); border-left: 3px solid ${primary};"><div class="flex items-start justify-between"><h3 class="text-xl font-bold mb-2" style="color:${primary}">${escapeHtml(title)}</h3><span class="text-xs text-gray-400">${ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : ''}</span></div><p class="text-gray-200 text-sm leading-relaxed">${escapeHtml(content)}</p>${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" class="inline-block mt-3 text-xs font-semibold" style="color:${primary}"><i class="fas fa-external-link-alt"></i> ${currentLanguage === 'en' ? 'Learn more' : 'Μάθετε περισσότερα'}</a>` : ''}</div>` }).join('')}</div>`;
             })();
+            const homeImg = getLocalizedField('homeImage');
+            const homeLink = getLocalizedField('homeLink');
+            const homeContentHtml = renderSectionCard(getLocalizedField('homeContent'), homeImg, homeLink, primary);
             return `
                 <div class="relative overflow-hidden pt-8 pb-8">
                     <div class="absolute inset-0 hero-gradient opacity-40"></div>
                     <div class="container mx-auto px-6 relative z-10">
                         <div class="flex flex-col lg:flex-row items-center gap-12">
                             <div class="flex-1 text-center lg:text-left">
-                                <h1 class="text-5xl md:text-6xl font-extrabold mb-4">${getLocalizedText('heroTitle')}</h1>
-                                <p class="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 mb-8">${getLocalizedText('heroSubtitle')}</p>
+                                <h1 class="text-5xl md:text-6xl font-extrabold mb-4">${getLocalizedField('heroTitle')}</h1>
+                                <p class="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 mb-8">${getLocalizedField('heroSubtitle')}</p>
                                 <a href="#pricing" class="px-6 py-3 rounded-full font-bold btn-glow inline-block" style="background:${primary}; color:#fff;">${t('explorePackages')}</a>
                             </div>
                             <div class="flex-1">
-                                <div class="carousel-container">
-                                    <div id="mainCarouselSlides" class="carousel-slides"></div>
-                                    <div id="mainCarouselDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div>
-                                </div>
+                                <div class="carousel-container"><div id="mainCarouselSlides" class="carousel-slides"></div><div id="mainCarouselDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="container mx-auto px-6 py-12">
-                    <div class="glass-card p-8 rounded-2xl max-w-4xl mx-auto" style="background: rgba(0,0,0,0.3);">
-                        <p class="text-lg leading-relaxed">${getLocalizedText('homeContent')}</p>
-                    </div>
-                </div>
-                <div class="container mx-auto px-6 py-8">
-                    <div class="links-header"><i class="fas fa-link text-2xl" style="color:${primary}"></i><h2 class="text-2xl font-bold">${t('partnersLinks')}</h2></div>
-                    <div class="small-carousel-container max-w-3xl mx-auto">
-                        <div id="linksCarouselSlides" class="small-carousel-slides"></div>
-                        <div id="linksCarouselDots" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1 z-10"></div>
-                    </div>
-                    <p class="text-center text-xs text-gray-400 mt-3">${currentLanguage === 'en' ? 'Click on any image to visit partner website' : 'Κάντε κλικ σε οποιαδήποτε εικόνα για να επισκεφτείτε τον ιστότοπο του συνεργάτη'}</p>
-                </div>
-                <div class="container mx-auto px-6 pb-8">
-                    <div class="disclaimer-card glass-card p-4 rounded-xl max-w-3xl mx-auto flex items-start gap-3" style="background: rgba(0,0,0,0.5); border-left-color: ${primary};">
-                        <i class="fas fa-exclamation-triangle text-xl mt-0.5" style="color: ${primary}"></i>
-                        <div><h4 class="font-bold text-sm mb-1" style="color: ${primary}">${t('disclaimer')}</h4><p class="text-xs text-gray-300 leading-relaxed">${getDisclaimerText()}</p></div>
-                    </div>
-                </div>
-                <div class="container mx-auto px-6 py-12 border-t border-white/10">
-                    <div class="flex items-center gap-3 justify-center mb-8"><i class="fas fa-bullhorn text-3xl" style="color:${primary}"></i><h2 class="text-3xl font-bold">${t('latestNews')}</h2></div>
-                    ${announcementsHtml}
-                </div>
+                <div class="container mx-auto px-6 py-12"><div class="max-w-4xl mx-auto">${homeContentHtml}</div></div>
+                <div class="container mx-auto px-6 py-8"><div class="links-header"><i class="fas fa-link text-2xl" style="color:${primary}"></i><h2 class="text-2xl font-bold">${t('partnersLinks')}</h2></div><div class="small-carousel-container max-w-3xl mx-auto"><div id="linksCarouselSlides" class="small-carousel-slides"></div><div id="linksCarouselDots" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1 z-10"></div></div><p class="text-center text-xs text-gray-400 mt-3">${currentLanguage === 'en' ? 'Click on any image to visit partner website' : 'Κάντε κλικ σε οποιαδήποτε εικόνα για να επισκεφτείτε τον ιστότοπο του συνεργάτη'}</p></div>
+                <div class="container mx-auto px-6 pb-8"><div class="disclaimer-card glass-card p-4 rounded-xl max-w-3xl mx-auto flex items-start gap-3" style="background: rgba(0,0,0,0.5); border-left-color: ${primary};"><i class="fas fa-exclamation-triangle text-xl mt-0.5" style="color: ${primary}"></i><div><h4 class="font-bold text-sm mb-1" style="color: ${primary}">${t('disclaimer')}</h4><p class="text-xs text-gray-300 leading-relaxed">${getDisclaimerText()}</p></div></div></div>
+                <div class="container mx-auto px-6 py-12 border-t border-white/10"><div class="flex items-center gap-3 justify-center mb-8"><i class="fas fa-bullhorn text-3xl" style="color:${primary}"></i><h2 class="text-3xl font-bold">${t('latestNews')}</h2></div>${announcementsHtml}</div>
             `;
         }
-        function renderEducationPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-graduation-cap text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('education')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('educationContent')}</p></div></div>`; }
-        function renderMentorPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-chalkboard-user text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('mentor')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('mentorContent')}</p></div></div>`; }
-        function renderCommunityPage(primary) { return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-users text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('community')}</h1></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><p class="text-lg leading-relaxed">${getLocalizedText('communityContent')}</p></div></div>`; }
+        
+        function renderEducationPage(primary) {
+            const img = getLocalizedField('educationImage');
+            const link = getLocalizedField('educationLink');
+            const content = getLocalizedField('educationContent');
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-graduation-cap text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('education')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(content, img, link, primary)}</div></div>`;
+        }
+        function renderMentorPage(primary) {
+            const img = getLocalizedField('mentorImage');
+            const link = getLocalizedField('mentorLink');
+            const content = getLocalizedField('mentorContent');
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-chalkboard-user text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('mentor')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(content, img, link, primary)}</div></div>`;
+        }
+        function renderCommunityPage(primary) {
+            const img = getLocalizedField('communityImage');
+            const link = getLocalizedField('communityLink');
+            const content = getLocalizedField('communityContent');
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-users text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('community')}</h1></div><div class="max-w-4xl mx-auto">${renderSectionCard(content, img, link, primary)}</div></div>`;
+        }
         function renderPricingPage(primary) {
+            const img = getLocalizedField('pricingImage');
+            const link = getLocalizedField('pricingLink');
+            const content = getLocalizedField('pricingContent');
             const packagesHtml = packagesList.map(pkg => {
                 let name = pkg.name, description = pkg.description || '', features = pkg.features || [];
                 if (currentLanguage === 'en') {
@@ -395,7 +416,7 @@
                     <button onclick="window.selectPackage('${pkg.id}', '${escapeHtml(name).replace(/'/g, "\\'")}')" class="mt-3 py-2 px-4 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('selectPackage')} <i class="fas fa-arrow-right ml-1"></i></button>
                 </div>`;
             }).join('');
-            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-8"><h1 class="text-4xl md:text-5xl font-bold">${t('pricing')}</h1><p class="text-gray-400 mt-2">${getLocalizedText('pricingContent')}</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${packagesList.length === 0 ? `<div class="col-span-full text-center py-12">${t('loading')}</div>` : packagesHtml}</div></div>`;
+            return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-8"><h1 class="text-4xl md:text-5xl font-bold">${t('pricing')}</h1></div><div class="max-w-4xl mx-auto mb-12">${renderSectionCard(content, img, link, primary)}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${packagesList.length === 0 ? `<div class="col-span-full text-center py-12">${t('loading')}</div>` : packagesHtml}</div></div>`;
         }
         function renderContactPage(primary) {
             return `<div class="container mx-auto px-6 py-20"><div class="text-center mb-10"><i class="fas fa-envelope text-5xl mb-4" style="color:${primary}"></i><h1 class="text-4xl md:text-5xl font-bold">${t('contact')}</h1><p class="text-gray-400 mt-2">${currentLanguage === 'en' ? 'Send us a message' : 'Στείλτε μας μήνυμα'}</p></div><div class="max-w-4xl mx-auto glass-card p-8 rounded-2xl"><div class="grid md:grid-cols-2 gap-8"><div><h3 class="text-xl font-bold mb-4">${t('contactInfo')}</h3><div class="space-y-3"><div><i class="fas fa-envelope w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactEmail)}</div><div><i class="fas fa-phone-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactPhone)}</div><div><i class="fas fa-map-marker-alt w-6" style="color:${primary}"></i> ${escapeHtml(siteSettings.contactAddress)}</div></div></div><div><h3 class="text-xl font-bold mb-4">${t('contactForm')}</h3><form id="contactForm"><input type="text" id="contactName" placeholder="${t('name')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><input type="email" id="contactEmailInput" placeholder="${t('email')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required><textarea id="contactMessage" rows="4" placeholder="${t('message')}" class="w-full p-3 mb-3 rounded-lg bg-gray-800 border border-gray-700" required></textarea><button type="submit" class="px-6 py-2 rounded-full font-bold btn-glow" style="background:${primary}; color:#fff;">${t('send')}</button></form><div id="contactFormMsg" class="mt-3 text-sm text-green-400"></div></div></div></div></div>`;
@@ -426,10 +447,7 @@
                                 <a class="nav-link ${currentPage === 'pricing' ? 'active' : ''}" data-page="pricing" style="color:${primary}">${t('pricing')}</a>
                                 <a class="nav-link ${currentPage === 'contact' ? 'active' : ''}" data-page="contact" style="color:${primary}">${t('contact')}</a>
                             </div></div>
-                            <div class="flex items-center gap-3">
-                                <div class="flex gap-2 text-sm font-medium"><button id="langEl" class="lang-btn ${currentLanguage === 'el' ? 'active' : ''}" style="color:${primary}">EL</button><span>|</span><button id="langEn" class="lang-btn ${currentLanguage === 'en' ? 'active' : ''}" style="color:${primary}">EN</button></div>
-                                <button id="openAdminWindowBtn" class="text-sm px-4 py-2 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user-shield mr-1"></i> ${t('adminPortal')}</button>
-                            </div>
+                            <div class="flex items-center gap-3"><div class="flex gap-2 text-sm font-medium"><button id="langEl" class="lang-btn ${currentLanguage === 'el' ? 'active' : ''}" style="color:${primary}">EL</button><span>|</span><button id="langEn" class="lang-btn ${currentLanguage === 'en' ? 'active' : ''}" style="color:${primary}">EN</button></div><button id="openAdminWindowBtn" class="text-sm px-4 py-2 rounded-full border border-white/30 hover:bg-white/10"><i class="fas fa-user-shield mr-1"></i> ${t('adminPortal')}</button></div>
                         </div>
                     </nav>
                     <div class="page-transition">${mainContent}</div>
@@ -452,235 +470,84 @@
             };
         };
 
-        // ---------- ADMIN VIEW WITH IMAGE EDITOR (reorder + zoom) ----------
+        // ADMIN VIEW with full section editor
         function renderAdminView() {
             if (!adminAuthorized) return renderAdminLogin();
-            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-7xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">Settings & Image Editor</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
+            return `<div class="min-h-screen p-6" style="background:#0b0c15;"><div class="max-w-7xl mx-auto"><div class="flex justify-between items-center mb-8"><div><i class="fas fa-crown text-3xl" style="color:${siteSettings.primaryColor}"></i><h1 class="text-3xl font-bold inline ml-2">Admin Manager</h1></div><div><button id="viewMainSiteBtn" class="px-4 py-2 bg-gray-700 rounded-lg">Main Site</button><button id="adminLogoutBtn" class="ml-3 px-4 py-2 bg-red-600 rounded-lg">Logout</button></div></div><div class="flex border-b border-gray-700 mb-6 gap-2 flex-wrap"><button class="tab-btn active-tab px-5 py-2 rounded-t-lg" data-tab="settings">All Settings & Images</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="packages">Packages</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="leads">Leads</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="announcements">Announcements</button><button class="tab-btn px-5 py-2 rounded-t-lg" data-tab="contacts">Messages</button></div><div id="adminTabContent" class="glass-card p-6 rounded-2xl" style="background:#10111f;"></div></div></div>`;
         }
         function renderAdminLogin() { return `<div class="min-h-screen flex items-center justify-center p-5" style="background:#0a0a14;"><div class="glass-card max-w-md w-full p-8 rounded-2xl"><div class="text-center mb-6"><i class="fas fa-shield-alt text-5xl" style="color:#f7931a"></i><h2 class="text-2xl font-bold mt-2">Admin Auth</h2></div><div id="adminAuthForm"><input type="email" id="adminEmail" placeholder="Email" class="w-full mb-3 p-3 rounded-lg bg-gray-800"><input type="password" id="adminPassword" placeholder="Password" class="w-full mb-4 p-3 rounded-lg bg-gray-800"><button id="adminLoginBtn" class="w-full py-2 rounded-full font-bold mb-2" style="background:#f7931a; color:#000">Login</button><button id="adminRegisterBtn" class="w-full py-2 rounded-full border border-gray-500">Register (Admin)</button></div><div id="adminAuthMsg" class="text-red-400 text-sm mt-3 text-center"></div></div></div>`; }
         async function checkAdminAuthorization(user) { if (!user) return false; const adminDocRef = doc(db, "admin", "adminData"); const adminSnap = await getDoc(adminDocRef); if (adminSnap.exists() && adminSnap.data().adminUid === user.uid) return true; if (!adminSnap.exists()) { await setDoc(adminDocRef, { adminUid: user.uid }); return true; } return false; }
-        function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10')); btn.classList.add('active-tab','bg-white/10'); if(btn.dataset.tab === 'settings') renderSettingsTab(); if(btn.dataset.tab === 'packages') renderPackagesTab(); if(btn.dataset.tab === 'leads') renderLeadsTab(); if(btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if(btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderSettingsTab(); }
+        function loadAdminDashboardLogic() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab','bg-white/10')); btn.classList.add('active-tab','bg-white/10'); if(btn.dataset.tab === 'settings') renderFullSettingsTab(); if(btn.dataset.tab === 'packages') renderPackagesTab(); if(btn.dataset.tab === 'leads') renderLeadsTab(); if(btn.dataset.tab === 'announcements') renderAnnouncementsTab(); if(btn.dataset.tab === 'contacts') renderContactMessagesTab(); }; }); renderFullSettingsTab(); }
         
-        // Image editor helper: create zoomable preview with drag handle
-        function renderImageEditor(items, type, onReorder, onUpdateItem) {
-            const container = document.createElement('div');
-            container.className = 'space-y-3';
-            items.forEach((item, idx) => {
-                const imgUrl = type === 'main' ? item : item.image;
-                const urlValue = type === 'main' ? item : item.url;
-                const div = document.createElement('div');
-                div.className = 'image-editor-item bg-gray-800 rounded-xl p-3 flex flex-col md:flex-row items-center gap-4';
-                div.setAttribute('data-idx', idx);
-                div.innerHTML = `
-                    <div class="sortable-handle cursor-grab"><i class="fas fa-grip-vertical text-gray-400"></i></div>
-                    <div class="image-preview-container relative">
-                        <img src="${escapeHtml(imgUrl)}" class="preview-img w-32 h-24 object-cover rounded-lg" style="transform: scale(1);" onerror="this.src='https://via.placeholder.com/128x96?text=Error'">
-                        <div class="zoom-controls">
-                            <button class="zoom-in" data-idx="${idx}" data-type="${type}"><i class="fas fa-search-plus"></i></button>
-                            <button class="zoom-out" data-idx="${idx}" data-type="${type}"><i class="fas fa-search-minus"></i></button>
-                        </div>
-                    </div>
-                    <div class="flex-1 w-full">
-                        <input type="text" class="image-url w-full p-2 rounded bg-gray-700 text-sm" value="${escapeHtml(imgUrl)}" placeholder="Image URL">
-                        ${type === 'links' ? `<input type="text" class="link-url w-full p-2 mt-2 rounded bg-gray-700 text-sm" value="${escapeHtml(urlValue)}" placeholder="Link URL (https://...)">` : ''}
-                        <button class="delete-item mt-2 bg-red-600 text-xs px-3 py-1 rounded"><i class="fas fa-trash"></i> Delete</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-            // Add new item button
-            const addBtn = document.createElement('button');
-            addBtn.className = 'mt-3 bg-emerald-600 text-sm px-4 py-2 rounded-lg w-full md:w-auto';
-            addBtn.innerHTML = `<i class="fas fa-plus"></i> Add New ${type === 'main' ? 'Image' : 'Link'}`;
-            addBtn.onclick = () => {
-                const newItem = type === 'main' ? 'https://via.placeholder.com/1200x400?text=New+Image' : { image: 'https://via.placeholder.com/600x180?text=New+Link', url: 'https://' };
-                const newList = [...items, newItem];
-                onReorder(newList);
-            };
-            container.appendChild(addBtn);
-            
-            // Attach event listeners
-            container.querySelectorAll('.zoom-in').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(btn.dataset.idx);
-                    const img = btn.closest('.image-preview-container').querySelector('.preview-img');
-                    let currentScale = parseFloat(img.style.transform.replace('scale(', '').replace(')', '')) || 1;
-                    currentScale = Math.min(currentScale + 0.2, 3);
-                    img.style.transform = `scale(${currentScale})`;
-                });
-            });
-            container.querySelectorAll('.zoom-out').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(btn.dataset.idx);
-                    const img = btn.closest('.image-preview-container').querySelector('.preview-img');
-                    let currentScale = parseFloat(img.style.transform.replace('scale(', '').replace(')', '')) || 1;
-                    currentScale = Math.max(currentScale - 0.2, 0.5);
-                    img.style.transform = `scale(${currentScale})`;
-                });
-            });
-            container.querySelectorAll('.image-url').forEach((input, i) => {
-                input.addEventListener('change', () => {
-                    const newList = [...items];
-                    if (type === 'main') newList[i] = input.value;
-                    else newList[i] = { ...newList[i], image: input.value };
-                    onUpdateItem(newList);
-                });
-            });
-            if (type === 'links') {
-                container.querySelectorAll('.link-url').forEach((input, i) => {
-                    input.addEventListener('change', () => {
-                        const newList = [...items];
-                        newList[i] = { ...newList[i], url: input.value };
-                        onUpdateItem(newList);
-                    });
-                });
-            }
-            container.querySelectorAll('.delete-item').forEach((btn, i) => {
-                btn.addEventListener('click', () => {
-                    const newList = items.filter((_, idx) => idx !== i);
-                    onReorder(newList);
-                });
-            });
-            return container;
-        }
-
-        async function renderSettingsTab() {
+        async function renderFullSettingsTab() {
             const container = document.getElementById('adminTabContent');
-            // Create main carousel editor
-            const mainEditorDiv = document.createElement('div');
-            mainEditorDiv.innerHTML = '<h4 class="font-bold text-lg mb-2 mt-4">🎠 Main Carousel Images (drag to reorder)</h4><div id="mainCarouselEditor"></div>';
-            const linksEditorDiv = document.createElement('div');
-            linksEditorDiv.innerHTML = '<h4 class="font-bold text-lg mb-2 mt-6">🔗 Links Carousel (drag to reorder, click images to zoom)</h4><div id="linksCarouselEditor"></div>';
-            
-            container.innerHTML = `<div class="grid grid-cols-1 gap-4"><div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div>
+            container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div><label>Primary Color</label><input type="color" id="primaryColor" value="${siteSettings.primaryColor}" class="w-full p-1 h-10 rounded"></div>
                 <div><label>Background Color</label><input type="color" id="backgroundColor" value="${siteSettings.backgroundColor}" class="w-full p-1 h-10 rounded"></div>
                 <div><label>Logo URL</label><input type="text" id="logoUrl" value="${escapeHtml(siteSettings.logoUrl)}" class="w-full p-2 rounded bg-gray-800"></div>
                 <div><label>Footer Text</label><input type="text" id="footerText" value="${escapeHtml(siteSettings.footerText)}" class="w-full p-2 rounded bg-gray-800"></div>
                 <div><label>Contact Email</label><input type="email" id="contactEmail" value="${escapeHtml(siteSettings.contactEmail)}" class="w-full p-2 rounded bg-gray-800"></div>
                 <div><label>Contact Phone</label><input type="text" id="contactPhone" value="${escapeHtml(siteSettings.contactPhone)}" class="w-full p-2 rounded bg-gray-800"></div>
                 <div><label>Contact Address</label><input type="text" id="contactAddress" value="${escapeHtml(siteSettings.contactAddress)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">🏠 Home Section</h3></div>
+                <div><label>Home Image URL</label><input type="text" id="homeImage" value="${escapeHtml(siteSettings.homeImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Home Link (optional)</label><input type="text" id="homeLink" value="${escapeHtml(siteSettings.homeLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Home Content (el)</label><textarea id="homeContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent)}</textarea></div>
+                <div class="col-span-2"><label>Home Content (en)</label><textarea id="homeContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">📘 Education Section</h3></div>
+                <div><label>Education Image URL</label><input type="text" id="educationImage" value="${escapeHtml(siteSettings.educationImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Education Link</label><input type="text" id="educationLink" value="${escapeHtml(siteSettings.educationLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Education Content (el)</label><textarea id="educationContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.educationContent)}</textarea></div>
+                <div class="col-span-2"><label>Education Content (en)</label><textarea id="educationContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.educationContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">🎓 Mentor Section</h3></div>
+                <div><label>Mentor Image URL</label><input type="text" id="mentorImage" value="${escapeHtml(siteSettings.mentorImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Mentor Link</label><input type="text" id="mentorLink" value="${escapeHtml(siteSettings.mentorLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Mentor Content (el)</label><textarea id="mentorContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.mentorContent)}</textarea></div>
+                <div class="col-span-2"><label>Mentor Content (en)</label><textarea id="mentorContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.mentorContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">👥 Community Section</h3></div>
+                <div><label>Community Image URL</label><input type="text" id="communityImage" value="${escapeHtml(siteSettings.communityImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Community Link</label><input type="text" id="communityLink" value="${escapeHtml(siteSettings.communityLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Community Content (el)</label><textarea id="communityContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.communityContent)}</textarea></div>
+                <div class="col-span-2"><label>Community Content (en)</label><textarea id="communityContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.communityContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">💰 Pricing Section</h3></div>
+                <div><label>Pricing Image URL</label><input type="text" id="pricingImage" value="${escapeHtml(siteSettings.pricingImage)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div><label>Pricing Link</label><input type="text" id="pricingLink" value="${escapeHtml(siteSettings.pricingLink)}" class="w-full p-2 rounded bg-gray-800"></div>
+                <div class="col-span-2"><label>Pricing Content (el)</label><textarea id="pricingContent" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.pricingContent)}</textarea></div>
+                <div class="col-span-2"><label>Pricing Content (en)</label><textarea id="pricingContent_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.pricingContent_en||'')}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">Hero & Disclaimer</h3></div>
                 <div><label>Hero Title (el)</label><input type="text" id="heroTitle" value="${escapeHtml(siteSettings.heroTitle)}" class="w-full p-2 rounded bg-gray-800"></div>
                 <div><label>Hero Title (en)</label><input type="text" id="heroTitle_en" value="${escapeHtml(siteSettings.heroTitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div>
                 <div><label>Hero Subtitle (el)</label><input type="text" id="heroSubtitle" value="${escapeHtml(siteSettings.heroSubtitle)}" class="w-full p-2 rounded bg-gray-800"></div>
                 <div><label>Hero Subtitle (en)</label><input type="text" id="heroSubtitle_en" value="${escapeHtml(siteSettings.heroSubtitle_en||'')}" class="w-full p-2 rounded bg-gray-800"></div>
-                <div><label>Home Content (el)</label><textarea id="homeContent" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent)}</textarea></div>
-                <div><label>Home Content (en)</label><textarea id="homeContent_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.homeContent_en||'')}</textarea></div>
-                <div><label>Disclaimer (el)</label><textarea id="disclaimerText" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div>
-                <div><label>Disclaimer (en)</label><textarea id="disclaimerText_en" rows="3" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div></div>`;
-            container.appendChild(mainEditorDiv);
-            container.appendChild(linksEditorDiv);
+                <div><label>Disclaimer (el)</label><textarea id="disclaimerText" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText)}</textarea></div>
+                <div><label>Disclaimer (en)</label><textarea id="disclaimerText_en" rows="2" class="w-full p-2 rounded bg-gray-800">${escapeHtml(siteSettings.disclaimerText_en)}</textarea></div>
+                <div class="col-span-2"><hr class="border-gray-600 my-2"><h3 class="font-bold text-lg">🎠 Main Carousel Images (JSON)</h3><textarea id="carouselImages" rows="3" class="w-full p-2 rounded bg-gray-800 font-mono">${JSON.stringify(carouselImagesList)}</textarea></div>
+                <div class="col-span-2"><h3 class="font-bold text-lg">🔗 Links Carousel (JSON array of {image, url})</h3><textarea id="linksCarousel" rows="5" class="w-full p-2 rounded bg-gray-800 font-mono">${JSON.stringify(linksCarouselList)}</textarea></div>
+            </div><button id="saveAllBtn" class="mt-6 px-6 py-2 rounded-full font-bold" style="background:#f7931a; color:#000">Save All Settings</button><div id="settingsMsg" class="mt-3 text-green-400"></div>`;
             
-            // Initialize sortable for main carousel
-            const mainEditorContainer = document.getElementById('mainCarouselEditor');
-            const linksEditorContainer = document.getElementById('linksCarouselEditor');
-            
-            function refreshMainEditor() {
-                const editor = renderImageEditor(carouselImagesList, 'main', 
-                    (newList) => { carouselImagesList = newList; refreshMainEditor(); updateCarousels(); },
-                    (newList) => { carouselImagesList = newList; refreshMainEditor(); updateCarousels(); }
-                );
-                mainEditorContainer.innerHTML = '';
-                mainEditorContainer.appendChild(editor);
-                // Make sortable
-                if (window.sortable) window.sortable(mainEditorContainer, { items: '.image-editor-item', handle: '.sortable-handle', onDrop: () => {
-                    const newItems = [];
-                    mainEditorContainer.querySelectorAll('.image-editor-item').forEach(el => {
-                        const imgUrl = el.querySelector('.image-url').value;
-                        newItems.push(imgUrl);
-                    });
-                    carouselImagesList = newItems;
-                    updateCarousels();
-                }});
-            }
-            
-            function refreshLinksEditor() {
-                const editor = renderImageEditor(linksCarouselList, 'links',
-                    (newList) => { linksCarouselList = newList; refreshLinksEditor(); updateCarousels(); },
-                    (newList) => { linksCarouselList = newList; refreshLinksEditor(); updateCarousels(); }
-                );
-                linksEditorContainer.innerHTML = '';
-                linksEditorContainer.appendChild(editor);
-                if (window.sortable) window.sortable(linksEditorContainer, { items: '.image-editor-item', handle: '.sortable-handle', onDrop: () => {
-                    const newItems = [];
-                    linksEditorContainer.querySelectorAll('.image-editor-item').forEach(el => {
-                        const imgUrl = el.querySelector('.image-url').value;
-                        const linkUrl = el.querySelector('.link-url')?.value || '';
-                        newItems.push({ image: imgUrl, url: linkUrl });
-                    });
-                    linksCarouselList = newItems;
-                    updateCarousels();
-                }});
-            }
-            
-            function updateCarousels() {
-                // Update global arrays and save to Firebase
+            document.getElementById('saveAllBtn').onclick = async () => {
+                let mainArray, linksArray;
+                try { mainArray = JSON.parse(document.getElementById('carouselImages').value); } catch(e) { mainArray = carouselImagesList; }
+                try { linksArray = JSON.parse(document.getElementById('linksCarousel').value); } catch(e) { linksArray = linksCarouselList; }
                 const updated = {
-                    carouselImages: JSON.stringify(carouselImagesList),
-                    linksCarousel: JSON.stringify(linksCarouselList)
+                    primaryColor: document.getElementById('primaryColor').value, backgroundColor: document.getElementById('backgroundColor').value,
+                    logoUrl: document.getElementById('logoUrl').value, footerText: document.getElementById('footerText').value,
+                    contactEmail: document.getElementById('contactEmail').value, contactPhone: document.getElementById('contactPhone').value, contactAddress: document.getElementById('contactAddress').value,
+                    homeImage: document.getElementById('homeImage').value, homeLink: document.getElementById('homeLink').value, homeContent: document.getElementById('homeContent').value, homeContent_en: document.getElementById('homeContent_en').value,
+                    educationImage: document.getElementById('educationImage').value, educationLink: document.getElementById('educationLink').value, educationContent: document.getElementById('educationContent').value, educationContent_en: document.getElementById('educationContent_en').value,
+                    mentorImage: document.getElementById('mentorImage').value, mentorLink: document.getElementById('mentorLink').value, mentorContent: document.getElementById('mentorContent').value, mentorContent_en: document.getElementById('mentorContent_en').value,
+                    communityImage: document.getElementById('communityImage').value, communityLink: document.getElementById('communityLink').value, communityContent: document.getElementById('communityContent').value, communityContent_en: document.getElementById('communityContent_en').value,
+                    pricingImage: document.getElementById('pricingImage').value, pricingLink: document.getElementById('pricingLink').value, pricingContent: document.getElementById('pricingContent').value, pricingContent_en: document.getElementById('pricingContent_en').value,
+                    heroTitle: document.getElementById('heroTitle').value, heroTitle_en: document.getElementById('heroTitle_en').value,
+                    heroSubtitle: document.getElementById('heroSubtitle').value, heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
+                    disclaimerText: document.getElementById('disclaimerText').value, disclaimerText_en: document.getElementById('disclaimerText_en').value,
+                    carouselImages: JSON.stringify(mainArray), linksCarousel: JSON.stringify(linksArray)
                 };
-                updateDoc(doc(db, "settings", "siteConfig"), updated).catch(console.error);
-                // Also update other settings
-                const otherSettings = {
-                    primaryColor: document.getElementById('primaryColor').value,
-                    backgroundColor: document.getElementById('backgroundColor').value,
-                    logoUrl: document.getElementById('logoUrl').value,
-                    footerText: document.getElementById('footerText').value,
-                    contactEmail: document.getElementById('contactEmail').value,
-                    contactPhone: document.getElementById('contactPhone').value,
-                    contactAddress: document.getElementById('contactAddress').value,
-                    heroTitle: document.getElementById('heroTitle').value,
-                    heroTitle_en: document.getElementById('heroTitle_en').value,
-                    heroSubtitle: document.getElementById('heroSubtitle').value,
-                    heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
-                    homeContent: document.getElementById('homeContent').value,
-                    homeContent_en: document.getElementById('homeContent_en').value,
-                    disclaimerText: document.getElementById('disclaimerText').value,
-                    disclaimerText_en: document.getElementById('disclaimerText_en').value
-                };
-                updateDoc(doc(db, "settings", "siteConfig"), otherSettings).catch(console.error);
-                const msgDiv = document.getElementById('settingsMsg') || (()=>{const d=document.createElement('div'); d.id='settingsMsg'; d.className='mt-3 text-green-400'; container.appendChild(d); return d;})();
-                if(msgDiv) { msgDiv.innerText = "✅ Settings and images saved!"; setTimeout(()=>msgDiv.innerText="",2000); }
-            }
-            
-            refreshMainEditor();
-            refreshLinksEditor();
-            
-            // Add save button for other settings
-            const saveBtn = document.createElement('button');
-            saveBtn.className = 'mt-6 px-6 py-2 rounded-full font-bold';
-            saveBtn.style.background = '#f7931a';
-            saveBtn.style.color = '#000';
-            saveBtn.innerText = 'Save All Settings (excluding images - auto-saved)';
-            saveBtn.onclick = async () => {
-                const otherSettings = {
-                    primaryColor: document.getElementById('primaryColor').value,
-                    backgroundColor: document.getElementById('backgroundColor').value,
-                    logoUrl: document.getElementById('logoUrl').value,
-                    footerText: document.getElementById('footerText').value,
-                    contactEmail: document.getElementById('contactEmail').value,
-                    contactPhone: document.getElementById('contactPhone').value,
-                    contactAddress: document.getElementById('contactAddress').value,
-                    heroTitle: document.getElementById('heroTitle').value,
-                    heroTitle_en: document.getElementById('heroTitle_en').value,
-                    heroSubtitle: document.getElementById('heroSubtitle').value,
-                    heroSubtitle_en: document.getElementById('heroSubtitle_en').value,
-                    homeContent: document.getElementById('homeContent').value,
-                    homeContent_en: document.getElementById('homeContent_en').value,
-                    disclaimerText: document.getElementById('disclaimerText').value,
-                    disclaimerText_en: document.getElementById('disclaimerText_en').value,
-                    carouselImages: JSON.stringify(carouselImagesList),
-                    linksCarousel: JSON.stringify(linksCarouselList)
-                };
-                await updateDoc(doc(db, "settings", "siteConfig"), otherSettings);
-                const msgDiv = document.getElementById('settingsMsg') || (()=>{const d=document.createElement('div'); d.id='settingsMsg'; d.className='mt-3 text-green-400'; container.appendChild(d); return d;})();
+                await updateDoc(doc(db, "settings", "siteConfig"), updated);
+                const msgDiv = document.getElementById('settingsMsg');
                 msgDiv.innerText = "✅ All settings saved!";
-                setTimeout(()=>msgDiv.innerText="",2000);
+                setTimeout(()=>msgDiv.innerText="",3000);
             };
-            container.appendChild(saveBtn);
-            const msgDiv = document.createElement('div');
-            msgDiv.id = 'settingsMsg';
-            msgDiv.className = 'mt-3 text-green-400';
-            container.appendChild(msgDiv);
         }
         
         async function renderPackagesTab() { const container = document.getElementById('adminTabContent'); const pkgHtml = packagesList.map(p => `<div class="flex justify-between items-center border-b py-2"><div><strong>${escapeHtml(p.name)}</strong> / ${escapeHtml(p.name_en||'')}<br><span class="text-xs">${escapeHtml(p.price)}</span></div><div><button onclick="window.editPackage('${p.id}')" class="bg-blue-600 px-2 py-1 rounded text-sm">Edit</button> <button onclick="window.deletePackageItem('${p.id}')" class="bg-red-600 px-2 py-1 rounded text-sm">Del</button></div></div>`).join(''); container.innerHTML = `<h3 class="text-xl font-bold">Packages</h3><button id="newPackageBtn" class="mb-3 bg-emerald-600 px-3 py-1 rounded">+ New</button><div>${pkgHtml||'None'}</div>`; document.getElementById('newPackageBtn').onclick = () => showPackageForm(); window.editPackage = (id) => showPackageForm(packagesList.find(p=>p.id===id)); window.deletePackageItem = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"packages",id)); }; }
